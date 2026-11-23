@@ -1,33 +1,85 @@
-/* 화성 대시보드 복제본 — 회색조 + 강조색 하나. 연구 노트 규칙과 일관. */
+/* 화성 대시보드 복제본 — 다모아 디자인 시스템 복제(다크 테마)
+   관측 토큰: 배경 #122A44 · 표면 #3F4B5D · 블루 #167AFF · 오렌지 #EC6708 · 흰 글자 */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
 
-:root { --ink:#1f1f1f; --muted:#6b6b6b; --rule:#e6e6e6; --accent:#a63d2f; }
+:root, [data-bs-theme="dark"] {
+  --navy:   #122A44;   /* 배경 */
+  --navy2:  #0e2238;   /* 상단바 */
+  --surface:#1b3a5c;   /* 카드 */
+  --surface2:#3f4b5d;  /* 보조 패널 */
+  --blue:   #167aff;   /* 주 강조 */
+  --orange: #ec6708;   /* 강조2 */
+  --ink:    #e8eef5;   /* 글자 */
+  --muted:  #9fb3c8;   /* 보조 글자 */
+  --rule:   rgba(255,255,255,.12);
 
-body, .navbar { font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "NanumGothic", sans-serif; }
-body { color: var(--ink); word-break: keep-all; }
+  --bs-body-bg: var(--navy);
+  --bs-body-color: var(--ink);
+  --bs-primary: var(--blue);
+  --bs-border-color: var(--rule);
+  --bs-emphasis-color: #fff;
+}
 
-.navbar { background: #273449 !important; }
-.navbar .navbar-brand, .navbar .nav-link { color: #fff !important; }
-.navbar .nav-link.active { color: #fff !important; border-bottom: 2px solid var(--accent); }
+body, .quarto-dashboard, .bslib-page-navbar {
+  background: var(--navy) !important;
+  color: var(--ink);
+  font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  word-break: keep-all;
+}
 
-.card { border-color: var(--rule); }
-.card-header { font-weight: 700; color: #111; background: #fafafa; border-bottom: 1px solid var(--rule); }
+/* 상단 내비 */
+.navbar { background: var(--navy2) !important; border-bottom: 1px solid var(--rule); }
+.navbar .navbar-brand { color: #fff !important; font-weight: 800; letter-spacing: -.01em; }
+.navbar .nav-link { color: #c7d6e6 !important; }
+.navbar .nav-link:hover { color: #fff !important; }
+.navbar .nav-link.active { color: #fff !important; border-bottom: 2px solid var(--blue); }
 
-.value-box .value-box-value { font-weight: 800; letter-spacing: -0.02em; }
+/* 카드 */
+.card, .bslib-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--rule) !important;
+  color: var(--ink);
+  box-shadow: 0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.25);
+}
+.card-header {
+  background: rgba(255,255,255,.04) !important;
+  color: #fff !important; font-weight: 700;
+  border-bottom: 1px solid var(--rule) !important;
+}
+
+/* 값 상자 — 다크 슬레이트 + 블루, 첫 상자는 오렌지(원본 인구 카드) */
+.value-box, .bslib-value-box {
+  background: var(--surface2) !important; color: var(--ink) !important;
+  border: 1px solid var(--rule); border-radius: 8px;
+}
+.value-box .value-box-title, .bslib-value-box .value-box-title { color: #c7d6e6; font-size: .9rem; }
+.value-box .value-box-value, .bslib-value-box .value-box-value {
+  color: #fff; font-weight: 800; letter-spacing: -.02em;
+}
+.value-box .value-box-showcase, .bslib-value-box .value-box-showcase { color: var(--blue); opacity: .9; }
+/* 첫 번째 값상자(인구/주민등록)를 오렌지 그라데이션으로 — 원본 포인트 */
+.bslib-grid > :first-child .value-box,
+.bslib-grid > :first-child .bslib-value-box {
+  background: linear-gradient(135deg, var(--orange), #bb5005) !important; border-color: transparent;
+}
+.bslib-grid > :first-child .value-box-title { color: #ffe3cf; }
+.bslib-grid > :first-child .value-box-showcase { color: #fff; }
 
 /* 표 */
-table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
-table.tbl th { color: var(--muted); font-weight: 700; text-align: left; border-bottom: 1px solid #111; padding: 6px 8px; white-space: nowrap; }
-table.tbl td { padding: 5px 8px; border-bottom: 1px solid #efefef; vertical-align: top; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--ink); }
+table.tbl th { color: var(--muted); font-weight: 700; text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,.3); padding: 6px 8px; white-space: nowrap; }
+table.tbl td { padding: 5px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
 
-/* 날씨 서버 수집 안내 */
-.pending { font-size: 1.8rem; font-weight: 800; color: #9a9a9a; }
-.collect-note { color: var(--accent); font-size: .82rem; border-left: 2px solid var(--accent); padding-left: .6rem; margin-top: .4rem; }
+/* 날씨 안내 */
+.pending { font-size: 1.8rem; font-weight: 800; color: #6f8aa6; }
+.collect-note { color: #ffb37a; font-size: .82rem; border-left: 2px solid var(--orange); padding-left: .6rem; margin-top: .4rem; }
 .muted { color: var(--muted); } .small { font-size: .78rem; }
+h1 { color: #fff; }
 
 .map-placeholder { height: 360px; display: flex; align-items: center; justify-content: center;
-  color: #9a9a9a; background: repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 10px,#f1f1f1 10px,#f1f1f1 20px);
-  border: 1px dashed #cfcfcf; border-radius: 6px; }
+  color: var(--muted); border: 1px dashed var(--rule); border-radius: 6px; background: rgba(255,255,255,.02); }
+.pledge-big { text-align: center; padding: 1rem; } .pledge-big h1 { font-size: 3rem; font-weight: 800; margin: 0; }
 
-.pledge-big { text-align: center; padding: 1rem; }
-.pledge-big h1 { font-size: 3rem; font-weight: 800; margin: 0; }
+/* folium 지도는 흰 바탕이므로 카드 안에서 모서리만 정리 */
+.card iframe, .card .folium-map { border-radius: 6px; }

@@ -89,6 +89,24 @@ def home_panel() -> ui.Tag:
     )
 
 
+def ev_map_html() -> str:
+    """충전소 좌표를 Leaflet(folium) 지도로. 공개 타일 — 네이버 키 불필요."""
+    import folium
+    from folium.plugins import MarkerCluster
+    ev = snapshot("evcharger")
+    m = folium.Map(location=[37.2, 126.9], zoom_start=11, tiles="OpenStreetMap")
+    if ev.get("status") == "ok":
+        mc = MarkerCluster().add_to(m)
+        for c in ev["chargers"]:
+            try:
+                lat, lng = float(c["lat"]), float(c["lng"])
+            except Exception:
+                continue
+            folium.CircleMarker([lat, lng], radius=3, color="#273449", fill=True,
+                                fill_opacity=0.7, popup=c.get("name")).add_to(mc)
+    return m._repr_html_()
+
+
 def traffic_panel() -> ui.Tag:
     ev = snapshot("evcharger")
     n = ev.get("n", 0) if ev.get("status") == "ok" else 0
@@ -97,8 +115,12 @@ def traffic_panel() -> ui.Tag:
         ui.layout_columns(
             value_box("전기차 충전소", f"{n:,}곳" if n else "— (서버 수집 대기)", "charging-station"),
             col_widths=(4,), fill=False),
-        ui.card(ui.card_header("전기차 충전소 — 화성시 (지도는 다음 단계)"),
-                ui.output_ui("ev_table")),
+        ui.layout_columns(
+            ui.card(ui.card_header("전기차 충전소 지도 — 화성시 (Leaflet · 공개 타일)"),
+                    ui.HTML(ev_map_html()), height="520px"),
+            ui.card(ui.card_header("충전소 목록"), ui.output_ui("ev_table")),
+            col_widths=(7, 5),
+        ),
     )
 
 
@@ -134,7 +156,9 @@ app_ui = ui.page_navbar(
     *[panel_for(m) for m in MENUS[1:]],
     title="화성특례시 통합 대시보드 · 복제본",
     id="menu",
-    header=ui.head_content(ui.include_css(HERE / "styles.css")),
+    header=ui.head_content(
+        ui.tags.script("document.documentElement.setAttribute('data-bs-theme','dark');"),
+        ui.include_css(HERE / "styles.css")),
     fillable=False,
 )
 
