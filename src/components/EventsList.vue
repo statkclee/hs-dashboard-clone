@@ -12,7 +12,7 @@ defineProps({ rows: Array })
 </template>
 
 <style scoped>
-.ev-list { display: flex; flex-direction: column; max-height: 420px; overflow-y: auto; }
+.ev-list { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
 .ev { padding: 9px 2px; border-bottom: 1px solid var(--rule); }
 .ev:last-child { border-bottom: 0; }
 .title { color: #fff; font-weight: 700; font-size: .95rem; line-height: 1.3; }

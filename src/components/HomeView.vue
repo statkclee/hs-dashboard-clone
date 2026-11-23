@@ -25,8 +25,7 @@ onMounted(async () => {
   ])
 })
 
-const eventRows = computed(() => events.value.map((r) => [r['행사명'], r['담당부서'], r['장소']]))
-const tideRows = computed(() => tide.value.map((r) => [r['차수'], r['상태'], r['종료시각']]))
+const eventsTop = computed(() => events.value.slice(0, 3)) // 홈은 이달의 행사 3개만
 </script>
 
 <template>
@@ -39,9 +38,9 @@ const tideRows = computed(() => tide.value.map((r) => [r['차수'], r['상태'],
           <PopCard />
         </div>
       </div>
-      <div class="pair">
+      <div class="pair pair-eq">
         <Card title="이 달의 행사">
-          <EventsList :rows="events" />
+          <EventsList :rows="eventsTop" />
         </Card>
         <Card title="제부도 바닷길">
           <TideCard :rows="tide" />
@@ -70,6 +69,10 @@ const tideRows = computed(() => tide.value.map((r) => [r['차수'], r['상태'],
 /* 좌측 영역: 2열(화성시|인구, 행사|제부도), 위상은 전체폭 */
 .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 .pop-col { display: flex; flex-direction: column; gap: 14px; }
+/* 행사|제부도: 패널 높이 동일 — 행사는 내부 스크롤, 제부도는 1차/2차 상하 분배 */
+.pair-eq { align-items: stretch; height: 300px; }
+.pair-eq > .card { height: 100%; display: flex; flex-direction: column; }
+.pair-eq > .card :deep(.card-b) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .mapcard :deep(.card-b) { padding: 0; }
 @media (max-width: 1200px) {
   .home { grid-template-columns: 1fr; }

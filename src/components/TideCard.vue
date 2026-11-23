@@ -25,8 +25,8 @@ const items = computed(() =>
 </template>
 
 <style scoped>
-.tide { display: flex; flex-direction: column; gap: 14px; }
-.row { display: flex; flex-direction: column; gap: 8px; }
+.tide { display: flex; flex-direction: column; justify-content: space-around; height: 100%; gap: 14px; }
+.row { display: flex; flex-direction: column; gap: 10px; }
 .cha { font-size: 1.15rem; font-weight: 800; color: #fff; }
 .pills { display: flex; align-items: center; gap: 10px; }
 .pill {
