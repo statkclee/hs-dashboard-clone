@@ -5,3 +5,4 @@ __pycache__/
 data/snapshot/
 _freeze/
 .env
+.env.bak*
