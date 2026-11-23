@@ -8,6 +8,8 @@ import PopCard from './PopCard.vue'
 import StatureCards from './StatureCards.vue'
 import PopMap from './PopMap.vue'
 import WeatherAir from './WeatherAir.vue'
+import EventsList from './EventsList.vue'
+import TideCard from './TideCard.vue'
 
 const wx = ref({}), air = ref({}), pop = ref({}), stations = ref({}), geo = ref(null)
 const events = ref([]), tide = ref([]), stature = ref([])
@@ -32,10 +34,10 @@ const tideRows = computed(() => tide.value.map((r) => [r['차수'], r['상태'],
       <WeatherMini :wx="wx" :air="air" />
       <PopCard />
       <Card title="이 달의 행사">
-        <DataTable :cols="['행사명', '담당부서', '장소']" :rows="eventRows" />
+        <EventsList :rows="events" />
       </Card>
       <Card title="제부도 바닷길">
-        <DataTable :cols="['차수', '상태', '종료시각']" :rows="tideRows" />
+        <TideCard :rows="tide" />
       </Card>
       <Card title="화성특례시의 위상">
         <StatureCards :rows="stature" />

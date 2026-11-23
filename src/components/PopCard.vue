@@ -5,21 +5,30 @@ defineProps({ total: { type: String, default: '1,074,002' } })
 
 <template>
   <section class="pop-card">
-    <div class="label">인구</div>
-    <div class="num">{{ total }}<span class="u">명</span></div>
-    <div class="ico"><Icon name="users" :size="64" /></div>
+    <div class="head">인구</div>
+    <div class="body">
+      <div class="num">{{ total }}<span class="u">명</span></div>
+      <div class="figs">
+        <Icon name="users" :size="92" />
+      </div>
+    </div>
   </section>
 </template>
 
 <style scoped>
-.pop-card {
-  position: relative; overflow: hidden; border-radius: var(--radius);
-  padding: 16px 18px;
-  background: linear-gradient(135deg, var(--orange-hot) 0%, var(--orange-hot) 58%, var(--peach) 100%);
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+.pop-card { border-radius: var(--radius); overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+/* 원본: 밝은 오렌지 헤더 */
+.head {
+  background: var(--orange-hot); color: #fff; font-weight: 800; font-size: 1.1rem;
+  text-align: center; padding: 10px 0; letter-spacing: .02em;
 }
-.label { color: #fff3ea; font-weight: 700; font-size: 1rem; }
-.num { color: #fff; font-weight: 800; font-size: 2.15rem; letter-spacing: -.02em; margin-top: 4px; }
+/* 원본: 어두운 갈색-오렌지 바디 + 실루엣 */
+.body {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #a5532a 0%, #7c3f20 100%);
+  padding: 22px 20px; min-height: 92px; display: flex; align-items: center;
+}
+.num { color: #fff; font-weight: 800; font-size: 2.3rem; letter-spacing: -.02em; z-index: 1; }
 .u { font-size: 1.1rem; font-weight: 700; margin-left: 3px; }
-.ico { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #fff; opacity: .26; }
+.figs { position: absolute; right: 10px; bottom: -14px; color: #fff; opacity: .22; }
 </style>
