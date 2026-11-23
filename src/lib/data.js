@@ -53,7 +53,7 @@ export function airGrade(kind, v) {
   const cols = ['#2fbf71', '#2c9bf0', '#ef8a3b', '#e05353']
   const emo = ['🙂', '😐', '😷', '😫']
   const i = cuts.reduce((a, c) => a + (n > c ? 1 : 0), 0)
-  return [labels[i], cols[i], emo[i]]
+  return [labels[i], cols[i], emo[i], i]
 }
 
 export const SKY = { 1: '맑음', 3: '구름많음', 4: '흐림' }

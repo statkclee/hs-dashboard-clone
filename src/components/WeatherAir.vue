@@ -2,7 +2,10 @@
 import { computed } from 'vue'
 import { airGrade, SKY, PTY, num } from '../lib/data.js'
 import DataTable from './DataTable.vue'
+import AirFace from './AirFace.vue'
 const props = defineProps({ wx: Object, air: Object })
+const base = import.meta.env.BASE_URL || './'
+const ic = (n) => `${base}assets/emoji/${n}.png`.replace(/\/\/+/g, '/')
 
 const ok = computed(() => props.wx?.status === 'ok')
 const airOk = computed(() => props.air?.status === 'ok')
@@ -37,15 +40,15 @@ const stRows = computed(() =>
         </div>
 
         <div class="condrow">
-          <div class="cond"><div class="cap">하늘</div><div class="cv">{{ SKY[String(wx.sky)] || '—' }}</div></div>
-          <div class="cond"><div class="cap">강수</div><div class="cv">{{ PTY[String(wx.pty)] || '—' }}</div></div>
-          <div class="cond"><div class="cap">강수확률</div><div class="cv">{{ wx.pop ?? '—' }}%</div></div>
+          <div class="cond"><img :src="ic('uv_sun')" class="cico" alt="" /><div class="cap">하늘</div><div class="cv">{{ SKY[String(wx.sky)] || '—' }}</div></div>
+          <div class="cond"><img :src="ic('rain_umbrella')" class="cico" alt="" /><div class="cap">강수</div><div class="cv">{{ PTY[String(wx.pty)] || '—' }}</div></div>
+          <div class="cond"><img :src="ic('dispersion_globe')" class="cico" alt="" /><div class="cap">강수확률</div><div class="cv">{{ wx.pop ?? '—' }}%</div></div>
         </div>
 
         <div class="sec">대기 현황</div>
         <div class="aq-row">
           <div v-for="b in badges" :key="b.name" class="aq">
-            <div class="emo">{{ b.g[2] }}</div>
+            <AirFace :grade="b.g[3]" :color="b.g[1]" :size="34" />
             <div class="line"><span class="aname">{{ b.name }}</span><span class="grade" :style="{ background: b.g[1] }">{{ b.g[0] }}</span></div>
             <div><span class="aval">{{ b.v ?? '—' }}</span><span class="aunit">{{ b.unit }}</span></div>
           </div>
@@ -53,9 +56,9 @@ const stRows = computed(() =>
 
         <div class="sec">기상</div>
         <div class="envrow">
-          <div class="env"><div class="cap">습도</div><div class="ev">{{ wx.humidity ?? '—' }}%</div></div>
-          <div class="env"><div class="cap">풍속</div><div class="ev">{{ wx.windSpeed ?? '—' }} ㎧</div></div>
-          <div class="env"><div class="cap">강수량</div><div class="ev">{{ wx.precip ?? '—' }}</div></div>
+          <div class="env"><img :src="ic('humidity_drop')" class="cico" alt="" /><div class="cap">습도</div><div class="ev">{{ wx.humidity ?? '—' }}%</div></div>
+          <div class="env"><img :src="ic('wind')" class="cico" alt="" /><div class="cap">풍속</div><div class="ev">{{ wx.windSpeed ?? '—' }} ㎧</div></div>
+          <div class="env"><img :src="ic('rain_umbrella')" class="cico" alt="" /><div class="cap">강수량</div><div class="ev">{{ wx.precip ?? '—' }}</div></div>
         </div>
 
         <template v-if="stRows.length">
@@ -92,8 +95,9 @@ const stRows = computed(() =>
   padding-left: 8px; border-left: 3px solid var(--orange-hot); }
 .aq-row { display: flex; gap: 10px; }
 .aq { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--rule);
-  border-radius: 10px; padding: 10px; text-align: center; }
-.emo { font-size: 1.5rem; }
+  border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cico { width: 26px; height: 26px; object-fit: contain; display: block; margin: 0 auto 2px; }
+.cond .cico, .env .cico { width: 24px; height: 24px; }
 .line { margin: 2px 0; }
 .aname { color: var(--muted); font-size: .82rem; margin-right: 5px; }
 .grade { color: #fff; font-size: .72rem; font-weight: 700; padding: 1px 7px; border-radius: 9px; }
