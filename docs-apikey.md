@@ -38,14 +38,19 @@
 
 ## 1-B. 재난안전데이터공유플랫폼 (safetydata.go.kr) — 별도 키
 
-산사태·붕괴위험은 **data.go.kr가 아니라 safetydata.go.kr**에 있다. 회원가입·이용신청·인증키가 **data.go.kr와 별개**다.
+산사태·붕괴위험은 **data.go.kr가 아니라 safetydata.go.kr**에 있고, 인증키가 data.go.kr와 별개다. 게다가 **서비스(데이터)마다 키를 따로 발급**하므로, 서비스별 환경변수로 나눠 둔다.
+
+| 서비스 | DSSP-IF | 이용신청 | 환경변수 | 쓰임 |
+|---|---|---|---|---|
+| 산사태우려지역 | `DSSP-IF-10694` | safetydata.go.kr에서 이용신청 | `SAFETY_LANDSLIDE_KEY` | 재난/안전 |
+| 붕괴위험지역(급경사지) | (별도 번호) | 〃 | `SAFETY_STEEPSLOPE_KEY` | 재난/안전 |
 
 | 순서 | 할 일 |
 |---|---|
 | 1 | safetydata.go.kr 회원가입·로그인 |
-| 2 | "산사태우려지역"(DSSP-IF-10694) · "붕괴위험지역" 각각 **이용신청** |
-| 3 | 승인 후 **마이페이지 → 오픈API 인증키**에서 serviceKey 확인 |
-| 4 | 서버 환경변수 `SAFETYDATA_KEY`로 설정(저장소 밖) |
+| 2 | 서비스별로 각각 **이용신청** (산사태·붕괴위험 따로) |
+| 3 | 승인 후 **마이페이지 → 오픈API 인증키**에서 그 서비스의 serviceKey 확인 |
+| 4 | 서버 환경변수에 서비스별로 설정 — `SAFETY_LANDSLIDE_KEY`, `SAFETY_STEEPSLOPE_KEY` (저장소 밖) |
 
 - 엔드포인트: `https://www.safetydata.go.kr/V2/api/DSSP-IF-10694`(산사태). 붕괴위험은 별도 DSSP-IF 번호.
 - 이용허락: 공공누리 제3유형(공공기관 제공 데이터).
