@@ -11,34 +11,47 @@ const pm10 = computed(() => airGrade('pm10', props.air?.pm10_avg))
 </script>
 
 <template>
-  <section class="card wcard">
+  <section class="card">
     <div class="card-h"><Icon name="pin" :size="15" /> 화성시</div>
     <div class="card-b">
-      <template v-if="ok">
-        <div class="temp-row">
-          <span class="temp">{{ wx.tempC }}</span><span class="unit">°C</span>
-          <span class="sky">{{ sky }}</span>
+      <!-- 파란 기온 패널 + 구름 -->
+      <div class="temp-panel">
+        <svg class="cloud" viewBox="0 0 120 70" aria-hidden="true">
+          <g fill="#ffffff" opacity="0.10">
+            <circle cx="40" cy="42" r="18" /><circle cx="62" cy="34" r="22" />
+            <circle cx="84" cy="44" r="16" /><rect x="40" y="44" width="46" height="18" rx="9" />
+          </g>
+        </svg>
+        <div class="temp">
+          <template v-if="ok"><span class="t">{{ wx.tempC }}</span><span class="u">°C</span></template>
+          <template v-else><span class="u big">°C</span></template>
         </div>
-        <div class="badges">
-          <div><span class="lab">초미세</span><span class="badge" :style="{ background: pm25[1] }">{{ pm25[0] }}</span></div>
-          <div><span class="lab">미세</span><span class="badge" :style="{ background: pm10[1] }">{{ pm10[0] }}</span></div>
-        </div>
-      </template>
-      <template v-else>
-        <div class="temp">— °C</div>
-        <p class="collect-note">서버 수집 대기 — 키는 서버에만.</p>
-      </template>
+        <div v-if="ok && sky" class="sky">{{ sky }}</div>
+      </div>
+      <!-- 등급 알약 -->
+      <div class="rows">
+        <div class="r"><span class="lab">초미세먼지</span><span class="pill" :style="{ background: pm25[1] }">{{ pm25[0] }}</span></div>
+        <div class="r"><span class="lab">미세먼지</span><span class="pill" :style="{ background: pm10[1] }">{{ pm10[0] }}</span></div>
+      </div>
     </div>
   </section>
 </template>
 
 <style scoped>
-.temp-row { display: flex; align-items: baseline; gap: 2px; }
-.temp { font-size: 2.5rem; font-weight: 800; color: #fff; line-height: 1; }
-.unit { font-size: 1.1rem; color: var(--muted); }
-.sky { margin-left: 10px; color: var(--muted); font-size: .98rem; align-self: center; }
-.badges { display: flex; gap: 14px; margin-top: 12px; }
-.badges > div { display: flex; align-items: center; gap: 7px; }
-.lab { color: var(--muted); font-size: .86rem; }
-.badge { color: #fff; font-weight: 700; font-size: .78rem; padding: 2px 9px; border-radius: 10px; }
+.temp-panel {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #2f5fa6 0%, #244c87 100%);
+  border-radius: 8px; height: 104px; margin-bottom: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.cloud { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 150px; height: 88px; }
+.temp { display: flex; align-items: baseline; gap: 2px; z-index: 1; }
+.temp .t { font-size: 2.6rem; font-weight: 800; color: #fff; line-height: 1; }
+.temp .u { font-size: 1.2rem; color: #dce8f7; font-weight: 700; }
+.temp .u.big { font-size: 1.7rem; }
+.sky { color: #cfe0f5; font-size: .9rem; margin-top: 4px; z-index: 1; }
+.rows { display: flex; flex-direction: column; gap: 9px; }
+.r { display: flex; align-items: center; justify-content: space-between; }
+.lab { color: var(--ink); font-size: .95rem; font-weight: 600; }
+.pill { color: #fff; font-weight: 700; font-size: .82rem; padding: 3px 14px; border-radius: 12px; min-width: 54px; text-align: center; }
 </style>

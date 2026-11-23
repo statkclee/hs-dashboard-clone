@@ -50,7 +50,8 @@ export function airGrade(kind, v) {
   if (n == null) return ['—', '#9fb3c8', '·']
   const cuts = { pm10: [30, 80, 150], pm25: [15, 35, 75], o3: [0.03, 0.09, 0.15] }[kind]
   const labels = ['좋음', '보통', '나쁨', '매우나쁨']
-  const cols = ['#2fbf71', '#2c9bf0', '#ef8a3b', '#e05353']
+  // 한국 대기질 표준 색: 좋음=파랑 · 보통=초록 · 나쁨=노랑 · 매우나쁨=빨강
+  const cols = ['#1c75d6', '#2fa84f', '#f5a623', '#e53935']
   const emo = ['🙂', '😐', '😷', '😫']
   const i = cuts.reduce((a, c) => a + (n > c ? 1 : 0), 0)
   return [labels[i], cols[i], emo[i], i]
