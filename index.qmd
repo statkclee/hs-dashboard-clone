@@ -1,0 +1,112 @@
+---
+title: "화성특례시 통합 대시보드 · 복제본"
+---
+
+```{r}
+#| include: false
+library(gt)
+read <- function(f) read.csv(file.path("data", f), fileEncoding = "UTF-8", check.names = FALSE)
+wi <- read("위상카드-다모아.csv")      # 홈 순위 카드 8
+ev <- read("행사.csv")                 # 이 달의 행사
+ti <- read("제부도물때.csv")           # 제부도 바닷길
+pl <- read("공약사업-요약.csv")        # 공약 이행률
+pc <- read("공약사업-분야별.csv")      # 공약 분야별
+# 날씨: 서버 수집 스냅숏(없으면 대기)
+wx <- tryCatch(jsonlite::fromJSON("data/snapshot/weather.json"), error = function(e) list(status = "pending"))
+pledge_rate <- pl$값[pl$항목 == "이행률"]
+gt_min <- function(df) df |> gt() |>
+  tab_options(table.font.size = px(13), table.width = pct(100),
+              column_labels.font.weight = "bold", data_row.padding = px(5),
+              table.border.top.style = "none", table.border.bottom.style = "none") |>
+  opt_table_font(font = c("Pretendard", "Apple SD Gothic Neo", default_fonts()))
+```
+
+# 홈
+
+## Row {height="18%"}
+
+::: {.valuebox color="light"}
+인구
+
+`r format(1074002, big.mark = ",")`명
+:::
+
+::: {.valuebox color="light"}
+GRDP · 전국 1위
+
+90.4조원
+:::
+
+::: {.valuebox color="light"}
+고용률 · 경기 1위
+
+67.9%
+:::
+
+::: {.valuebox color="light"}
+출생아 · 전국 1위
+
+`r format(8116, big.mark = ",")`명
+:::
+
+::: {.valuebox color="light"}
+공약 이행률
+
+`r pledge_rate`
+:::
+
+## Row {height="46%"}
+
+### Column {width="34%"}
+
+```{r}
+#| title: "화성시 날씨 · 대기"
+status <- if (is.null(wx$status)) "pending" else wx$status
+if (status == "ok") {
+  htmltools::HTML(sprintf("<div style='font-size:2.4rem;font-weight:800'>%s°C</div>", wx$tempC))
+} else {
+  htmltools::HTML(paste0(
+    "<div class='pending' style='font-size:1.6rem'>— °C</div>",
+    "<p class='collect-note'>서버 수집 대기 — 인증키가 서버에 설정되면 매시 수집됩니다. ",
+    "키는 브라우저로 전송하지 않습니다(원본 대시보드의 노출·429 문제를 구조적으로 제거).</p>",
+    "<p style='font-size:.8rem;color:#9a9a9a'>초미세먼지·미세먼지·자외선도 같은 방식으로 서버 수집</p>"))
+}
+```
+
+```{r}
+#| title: "제부도 바닷길"
+gt_min(ti)
+```
+
+### Column {width="40%"}
+
+```{r}
+#| title: "이 달의 행사"
+gt_min(ev)
+```
+
+### Column {width="26%"}
+
+```{r}
+#| title: "화성특례시의 위상"
+wi$`구분` <- paste0(wi$순위범위, " ", wi$순위, "위")
+gt_min(wi[, c("구분", "지표", "값표기")])
+```
+
+## Row {height="36%"}
+
+### Column {width="60%"}
+
+```{r}
+#| title: "공약사업 — 분야별 추진 현황"
+gt_min(pc)
+```
+
+### Column {width="40%"}
+
+```{r}
+#| title: "공약 이행"
+htmltools::HTML(sprintf(
+  "<div style='text-align:center;padding:1rem'><div style='font-size:3rem;font-weight:800'>%s / %s</div><div style='color:#6b6b6b'>이행 완료 · 이행률 %s</div></div>",
+  pl$값[pl$항목 == "이행 완료"], pl$값[pl$항목 == "전체 공약 수"], pledge_rate))
+```

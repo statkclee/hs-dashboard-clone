@@ -1,0 +1,8 @@
+/docs
+.quarto/
+*_files/
+.DS_Store
+data/snapshot/
+
+/.quarto/
+**/*.quarto_ipynb
