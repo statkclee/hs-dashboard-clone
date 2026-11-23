@@ -14,6 +14,14 @@ from faicons import icon_svg
 HERE = Path(__file__).parent
 DATA = HERE / "data"
 MENUS = ["홈", "도시현황", "행정현황", "사업관리", "재난/안전", "교통", "문화/관광", "바로이웃 통합돌봄"]
+# 원본 메뉴 아이콘을 faicons로 대응(원본: 집·막대·막대·클립보드·방패·차·랜드마크·사람들)
+ICONS = {"홈": "house", "도시현황": "chart-line", "행정현황": "chart-column",
+         "사업관리": "clipboard-list", "재난/안전": "shield-halved", "교통": "car",
+         "문화/관광": "landmark", "바로이웃 통합돌봄": "people-group"}
+
+
+def nav_icon(name: str):
+    return icon_svg(ICONS.get(name, "circle"))
 
 
 def load(name: str) -> pd.DataFrame:
@@ -58,7 +66,7 @@ def value_box(title: str, value: str, icon: str) -> ui.Tag:
 
 def home_panel() -> ui.Tag:
     return ui.nav_panel(
-        "홈",
+        ui.span(nav_icon("홈"), " 홈"),
         ui.layout_columns(
             value_box("인구", "1,074,002명", "users"),
             value_box("GRDP · 전국 1위", "90.4조원", "won-sign"),
@@ -165,7 +173,7 @@ def traffic_panel() -> ui.Tag:
     ev = snapshot("evcharger")
     n = ev.get("n", 0) if ev.get("status") == "ok" else 0
     return ui.nav_panel(
-        "교통",
+        ui.span(nav_icon("교통"), " 교통"),
         ui.layout_columns(
             value_box("전기차 충전소", f"{n:,}곳" if n else "— (서버 수집 대기)", "charging-station"),
             col_widths=(4,), fill=False),
@@ -182,7 +190,7 @@ def city_panel() -> ui.Tag:
     pop = snapshot("population")
     total = pop.get("total", 0) if pop.get("status") == "ok" else 0
     return ui.nav_panel(
-        "도시현황",
+        ui.span(nav_icon("도시현황"), " 도시현황"),
         ui.layout_columns(
             value_box("주민등록 인구", f"{total:,}명" if total else "— (서버 수집 대기)", "users"),
             value_box("읍면동", f"{pop.get('n', 0)}곳" if total else "—", "map-location-dot"),
@@ -198,7 +206,7 @@ def safety_panel() -> ui.Tag:
     pm = air.get("pm10_avg") if air.get("status") == "ok" else None
     nls = ls.get("n", 0) if ls.get("status") == "ok" else 0
     return ui.nav_panel(
-        "재난/안전",
+        ui.span(nav_icon("재난/안전"), " 재난/안전"),
         ui.layout_columns(
             value_box("미세먼지(PM10) 평균", f"{pm} µg/m³" if pm is not None else "— (수집 대기)", "wind"),
             value_box("초미세먼지(PM2.5) 평균",
@@ -216,7 +224,7 @@ def safety_panel() -> ui.Tag:
 
 def culture_panel() -> ui.Tag:
     return ui.nav_panel(
-        "문화/관광",
+        ui.span(nav_icon("문화/관광"), " 문화/관광"),
         ui.layout_columns(
             ui.card(ui.card_header("이 달의 행사"), ui.output_ui("events2")),
             ui.card(ui.card_header("제부도 바닷길 물때"), ui.output_ui("tide2")),
@@ -228,7 +236,7 @@ def culture_panel() -> ui.Tag:
 
 def business_panel() -> ui.Tag:
     return ui.nav_panel(
-        "사업관리",
+        ui.span(nav_icon("사업관리"), " 사업관리"),
         ui.layout_columns(
             value_box("전체 공약 수", f"{pledge_total}개", "list-check"),
             value_box("이행 완료", f"{pledge_done}개", "circle-check"),
@@ -240,7 +248,7 @@ def business_panel() -> ui.Tag:
 
 def admin_panel() -> ui.Tag:
     return ui.nav_panel(
-        "행정현황",
+        ui.span(nav_icon("행정현황"), " 행정현황"),
         ui.layout_columns(
             value_box("지방자치경쟁력", "종합 1위", "trophy"),
             value_box("인구", "전국 4위", "ranking-star"),
@@ -259,7 +267,7 @@ def care_panel() -> ui.Tag:
     total = int(ct["대상자수"].sum())
     svc = int(ct["월평균 서비스건수"].sum())
     return ui.nav_panel(
-        "바로이웃 통합돌봄",
+        ui.span(nav_icon("바로이웃 통합돌봄"), " 바로이웃 통합돌봄"),
         ui.div("⚠ 합성(가상) 데이터 — 개인정보 비수집 원칙에 따라 실제 대상자 행은 수집하지 않고, "
                "구조·화면 재현용 집계만 생성했습니다. 실데이터는 소관부서 승인·가명처리 후 연결.",
                class_="synth-note"),
@@ -302,7 +310,8 @@ def panel_for(name: str) -> ui.Tag:
 app_ui = ui.page_navbar(
     home_panel(),
     *[panel_for(m) for m in MENUS[1:]],
-    title="화성특례시 통합 대시보드 · 복제본",
+    title=ui.img(src="/static/logo.png", alt="모두의 행복 더큰 화성", height="38px",
+                 class_="brand-logo"),
     id="menu",
     header=ui.head_content(
         ui.tags.script("document.documentElement.setAttribute('data-bs-theme','dark');"),
@@ -435,4 +444,4 @@ def server(input, output, session):
         return df_to_table(si)
 
 
-app = App(app_ui, server)
+app = App(app_ui, server, static_assets={"/static": HERE / "www"})

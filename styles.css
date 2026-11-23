@@ -8,7 +8,10 @@
   --surface:#1b3a5c;   /* 카드 */
   --surface2:#3f4b5d;  /* 보조 패널 */
   --blue:   #167aff;   /* 주 강조 */
+  --blue2:  #2c67df;   /* 날씨·대기 패널 헤더(원본 관측) */
   --orange: #ec6708;   /* 강조2 */
+  --orange-hot: #ff7818; /* 인구 카드(원본 관측 rgb(255,120,24)) */
+  --peach:  #ffc1aa;   /* 인구 카드 하이라이트 끝색(원본 관측) */
   --ink:    #e8eef5;   /* 글자 */
   --muted:  #9fb3c8;   /* 보조 글자 */
   --rule:   rgba(255,255,255,.12);
@@ -21,30 +24,48 @@
 }
 
 body, .quarto-dashboard, .bslib-page-navbar {
-  background: var(--navy) !important;
   color: var(--ink);
   font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   word-break: keep-all;
+  /* 원본 별자리/네트워크 배경 재현 — 은은한 점 + 중앙 상단 광원 */
+  background-color: var(--navy) !important;
+  background-image:
+    radial-gradient(1200px 500px at 70% -5%, rgba(40,90,160,.35), transparent 70%),
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.10) 1px, transparent 1.6px),
+    radial-gradient(circle at 37% 42%, rgba(255,255,255,.07) 1px, transparent 1.6px),
+    radial-gradient(circle at 63% 28%, rgba(255,255,255,.09) 1px, transparent 1.6px),
+    radial-gradient(circle at 85% 55%, rgba(255,255,255,.06) 1px, transparent 1.6px),
+    radial-gradient(circle at 22% 75%, rgba(255,255,255,.07) 1px, transparent 1.6px),
+    radial-gradient(circle at 78% 82%, rgba(255,255,255,.06) 1px, transparent 1.6px) !important;
+  background-size: 100% 100%, 240px 240px, 300px 300px, 260px 260px, 320px 320px, 280px 280px, 340px 340px;
+  background-attachment: fixed;
 }
 
 /* 상단 내비 */
-.navbar { background: var(--navy2) !important; border-bottom: 1px solid var(--rule); }
-.navbar .navbar-brand { color: #fff !important; font-weight: 800; letter-spacing: -.01em; }
-.navbar .nav-link { color: #c7d6e6 !important; }
+/* 로고 PNG 배경(#122A44)과 동일 네이비로 맞춰 로고 테두리 박스 제거 */
+.navbar { background: #122a44 !important; border-bottom: 1px solid var(--rule); }
+.navbar .navbar-brand { padding: 2px 10px 2px 4px; display: flex; align-items: center; }
+.brand-logo { display: block; mix-blend-mode: lighten; }
+.navbar .nav-link { color: #d2deec !important; font-weight: 600; }
 .navbar .nav-link:hover { color: #fff !important; }
 .navbar .nav-link.active { color: #fff !important; border-bottom: 2px solid var(--blue); }
+/* 메뉴 아이콘(원본: 흰 라인 아이콘) */
+.navbar .nav-link svg { width: .95em; height: .95em; margin-right: .35em;
+  vertical-align: -.12em; fill: currentColor; opacity: .95; }
 
 /* 카드 */
 .card, .bslib-card {
-  background: var(--surface) !important;
+  background: rgba(27,58,92,.82) !important;
   border: 1px solid var(--rule) !important;
   color: var(--ink);
   box-shadow: 0 1px 0 rgba(255,255,255,.03), 0 8px 24px rgba(0,0,0,.25);
 }
+/* 원본 카드 제목: 좌측 컬러 바(오렌지) */
 .card-header {
   background: rgba(255,255,255,.04) !important;
   color: #fff !important; font-weight: 700;
   border-bottom: 1px solid var(--rule) !important;
+  border-left: 4px solid var(--orange-hot) !important;
 }
 
 /* 값 상자 — 다크 슬레이트 + 블루, 첫 상자는 오렌지(원본 인구 카드) */
@@ -60,9 +81,10 @@ body, .quarto-dashboard, .bslib-page-navbar {
 /* 첫 번째 값상자(인구/주민등록)를 오렌지 그라데이션으로 — 원본 포인트 */
 .bslib-grid > :first-child .value-box,
 .bslib-grid > :first-child .bslib-value-box {
-  background: linear-gradient(135deg, var(--orange), #bb5005) !important; border-color: transparent;
+  background: linear-gradient(135deg, var(--orange-hot) 0%, var(--orange-hot) 58%, var(--peach) 100%) !important;
+  border-color: transparent;
 }
-.bslib-grid > :first-child .value-box-title { color: #ffe3cf; }
+.bslib-grid > :first-child .value-box-title { color: #fff3ea; }
 .bslib-grid > :first-child .value-box-showcase { color: #fff; }
 
 /* 표 */
