@@ -101,4 +101,14 @@ shiny run app.py --reload   # http://127.0.0.1:8000
 - [ ] **6-4. 홈** — 좌(미니날씨·인구·행사·물때·위상) / 중앙(Leaflet choropleth) / 우(날씨·대기 상세)
 - [x] **6-5. 색·폰트·디테일 정밀 튜닝** — 원본 캡처와 1:1 비교(최우선)
 - [x] **6-6. 나머지 메뉴** — 도시현황·행정·사업·재난안전·교통·문화관광·통합돌봄
-- [ ] **6-7. Shiny(app.py) 은퇴** — git 이력 보존, 빌드/실행 문서 갱신
+- [x] **6-7. Shiny(app.py) 은퇴** — Vue가 주 프론트. app.py는 이력 보존(참고용), 실행은 아래 Vue 기준
+
+### 실행 (Vue 기준, 2026-11-24~)
+
+```bash
+# 1) 서버측 데이터 수집(키는 .env, 서버에만) → data/snapshot/*.json
+source ~/.venvs/hs-dashboard-clone/bin/activate && python _collect.py
+# 2) 프론트(Vue 3 + Vite) — public/data 심링크로 스냅숏/CSV/geojson 읽음
+npm install && npm run dev     # http://127.0.0.1:5173
+npm run build                  # 정적 산출물 dist/ (배포용)
+```
