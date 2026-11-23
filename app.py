@@ -30,17 +30,23 @@ pledge_done = pl.loc[pl["항목"] == "이행 완료", "값"].iloc[0]
 pledge_total = pl.loc[pl["항목"] == "전체 공약 수", "값"].iloc[0]
 
 
-def weather_snapshot() -> dict:
-    f = DATA / "snapshot" / "weather.json"
+def snapshot(name: str) -> dict:
+    f = DATA / "snapshot" / f"{name}.json"
     try:
         return json.loads(f.read_text(encoding="utf-8"))
     except Exception:
         return {"status": "pending"}
 
 
+def _cell(v) -> str:
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return "—"
+    return str(v)
+
+
 def df_to_table(df: pd.DataFrame) -> ui.Tag:
     head = ui.tags.thead(ui.tags.tr(*[ui.tags.th(c) for c in df.columns]))
-    rows = [ui.tags.tr(*[ui.tags.td(str(v)) for v in r]) for r in df.itertuples(index=False)]
+    rows = [ui.tags.tr(*[ui.tags.td(_cell(v)) for v in r]) for r in df.itertuples(index=False)]
     return ui.tags.table({"class": "tbl"}, head, ui.tags.tbody(*rows))
 
 
@@ -83,14 +89,31 @@ def home_panel() -> ui.Tag:
     )
 
 
+def traffic_panel() -> ui.Tag:
+    ev = snapshot("evcharger")
+    n = ev.get("n", 0) if ev.get("status") == "ok" else 0
+    return ui.nav_panel(
+        "교통",
+        ui.layout_columns(
+            value_box("전기차 충전소", f"{n:,}곳" if n else "— (서버 수집 대기)", "charging-station"),
+            col_widths=(4,), fill=False),
+        ui.card(ui.card_header("전기차 충전소 — 화성시 (지도는 다음 단계)"),
+                ui.output_ui("ev_table")),
+    )
+
+
 def stub_panel(name: str) -> ui.Tag:
     return ui.nav_panel(name, ui.card(ui.card_header(name),
         ui.p(f"{name} 화면 — 와이어프레임(images/wireframe/menus.svg)에 따라 구현 예정.", class_="muted")))
 
 
+def panel_for(name: str) -> ui.Tag:
+    return traffic_panel() if name == "교통" else stub_panel(name)
+
+
 app_ui = ui.page_navbar(
     home_panel(),
-    *[stub_panel(m) for m in MENUS[1:]],
+    *[panel_for(m) for m in MENUS[1:]],
     title="화성특례시 통합 대시보드 · 복제본",
     id="menu",
     header=ui.head_content(ui.include_css(HERE / "styles.css")),
@@ -101,16 +124,36 @@ app_ui = ui.page_navbar(
 def server(input, output, session):
     @render.ui
     def weather():
-        wx = weather_snapshot()
-        if wx.get("status") == "ok":
-            return ui.h1(f"{wx['tempC']}°C")
-        return ui.TagList(
-            ui.div("— °C", class_="pending"),
-            ui.p("서버 수집 대기 — 인증키가 서버에 설정되면 매시 수집됩니다. "
-                 "키는 브라우저로 전송하지 않습니다(원본의 노출·429 문제를 구조적으로 제거).",
-                 class_="collect-note"),
-            ui.p("초미세·미세·자외선·대기확산도 같은 방식으로 서버 수집", class_="muted small"),
-        )
+        wx = snapshot("weather")
+        air = snapshot("air")
+        if wx.get("status") != "ok":
+            return ui.TagList(
+                ui.div("— °C", class_="pending"),
+                ui.p("서버 수집 대기 — 인증키가 서버에 설정되면 매시 수집됩니다. "
+                     "키는 브라우저로 전송하지 않습니다(원본의 노출·429 문제를 구조적으로 제거).",
+                     class_="collect-note"),
+            )
+        parts = [ui.h1(f"{wx['tempC']}°C")]
+        if air.get("status") == "ok":
+            parts.append(ui.div(
+                ui.span(f"초미세 {air.get('pm25_avg')} ", class_="muted"),
+                ui.span(f"· 미세 {air.get('pm10_avg')} µg/m³ ", class_="muted"),
+                ui.span(f"· 측정소 {air.get('n')}곳", class_="muted small")))
+            st = pd.DataFrame(air["stations"])[["station", "pm10", "pm25", "o3"]]
+            st.columns = ["측정소", "미세(PM10)", "초미세(PM2.5)", "오존"]
+            parts.append(df_to_table(st))
+        parts.append(ui.p(f"서버 수집 {wx.get('collectedAt','')} · 키는 서버에만", class_="muted small"))
+        return ui.TagList(*parts)
+
+    @render.ui
+    def ev_table():
+        ev = snapshot("evcharger")
+        if ev.get("status") != "ok":
+            return ui.p("서버 수집 대기", class_="collect-note")
+        df = pd.DataFrame(ev["chargers"])[["name", "addr", "connectors"]].head(30)
+        df.columns = ["충전소", "주소", "충전기수"]
+        return ui.TagList(ui.p(f"화성시 충전소 {ev['n']:,}곳 (상위 30 표시)", class_="muted small"),
+                          df_to_table(df))
 
     @render.ui
     def events():

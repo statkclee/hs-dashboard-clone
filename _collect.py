@@ -56,13 +56,91 @@ def collect_weather(key: str) -> None:
         print(f"weather 수집 실패: {type(e).__name__}")
 
 
+HS_STATIONS = {"남양읍", "동탄", "봉담읍", "새솔동", "서신면", "송산3동", "우정읍", "청계동",
+               "향남읍", "병점", "비봉", "매송", "정남", "장안", "팔탄", "양감", "마도", "송산"}
+
+
+def _get(url: str) -> dict:
+    with urllib.request.urlopen(url, timeout=15) as r:
+        return json.loads(r.read())
+
+
+def collect_air(key: str) -> None:
+    """에어코리아 실시간 대기 — 경기 측정소 중 화성 측정소만."""
+    base = "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"
+    q = {"serviceKey": key, "returnType": "json", "numOfRows": 800, "pageNo": 1,
+         "sidoName": "경기", "ver": "1.0"}
+    try:
+        items = _get(base + "?" + urllib.parse.urlencode(q))["response"]["body"]["items"]
+        hs = [i for i in items if any(h in (i.get("stationName") or "") for h in HS_STATIONS)]
+        def num(x):
+            try: return float(x)
+            except Exception: return None
+        clean = [{"station": i["stationName"], "time": i.get("dataTime"),
+                  "pm10": num(i.get("pm10Value")), "pm25": num(i.get("pm25Value")),
+                  "o3": num(i.get("o3Value")), "khai": i.get("khaiGrade")} for i in hs]
+        pm10 = [c["pm10"] for c in clean if c["pm10"] is not None]
+        pm25 = [c["pm25"] for c in clean if c["pm25"] is not None]
+        save("air", {"status": "ok", "stations": clean,
+                     "pm10_avg": round(sum(pm10) / len(pm10), 1) if pm10 else None,
+                     "pm25_avg": round(sum(pm25) / len(pm25), 1) if pm25 else None,
+                     "n": len(clean)})
+        print(f"air 수집: 화성 측정소 {len(clean)}곳 · PM2.5 평균 {clean and round(sum(pm25)/len(pm25),1) if pm25 else '-'}")
+    except Exception as e:
+        save("air", {"status": "error", "reason": type(e).__name__})
+        print(f"air 수집 실패: {type(e).__name__}")
+
+
+def collect_stations(key: str) -> None:
+    """측정소 좌표(지도용)."""
+    base = "https://apis.data.go.kr/B552584/MsrstnInfoInqireSvc/getMsrstnList"
+    q = {"serviceKey": key, "returnType": "json", "numOfRows": 100, "pageNo": 1, "addr": "경기 화성"}
+    try:
+        items = _get(base + "?" + urllib.parse.urlencode(q))["response"]["body"]["items"]
+        st = [{"station": i["stationName"], "lat": float(i["dmX"]), "lng": float(i["dmY"]),
+               "addr": i.get("addr")} for i in items if i.get("dmX") and i.get("dmY")]
+        save("stations", {"status": "ok", "stations": st, "n": len(st)})
+        print(f"stations 수집: {len(st)}곳")
+    except Exception as e:
+        save("stations", {"status": "error", "reason": type(e).__name__})
+        print(f"stations 수집 실패: {type(e).__name__}")
+
+
+def collect_evcharger(key: str) -> None:
+    """전기차 충전소 — 화성시(zscode 41590) 서버측 필터. 충전기 → 충전소 단위로 접음."""
+    import xml.etree.ElementTree as ET
+    base = "https://apis.data.go.kr/B552584/EvCharger/getChargerInfo"
+    try:
+        q = {"serviceKey": key, "pageNo": 1, "numOfRows": 20000, "zscode": 41590}
+        with urllib.request.urlopen(base + "?" + urllib.parse.urlencode(q), timeout=60) as r:
+            root = ET.fromstring(r.read())
+        uniq = {}
+        for it in root.findall(".//item"):
+            g = lambda t: (it.findtext(t) or "")
+            kstat = (g("statNm"), g("lat"), g("lng"))
+            if kstat not in uniq:
+                uniq[kstat] = {"name": g("statNm"), "addr": g("addr"),
+                               "lat": g("lat"), "lng": g("lng"), "connectors": 0}
+            uniq[kstat]["connectors"] += 1
+        chg = list(uniq.values())
+        save("evcharger", {"status": "ok", "chargers": chg, "n": len(chg)})
+        print(f"evcharger 수집: 화성 충전소 {len(chg)}곳")
+    except Exception as e:
+        save("evcharger", {"status": "error", "reason": type(e).__name__})
+        print(f"evcharger 수집 실패: {type(e).__name__}")
+
+
 def main() -> None:
     key = os.environ.get("DATA_GO_KR_KEY", "")
     if not key:
         print("DATA_GO_KR_KEY 없음 — 수집 건너뜀. 화면은 '서버 수집 대기'로 표시됨.")
-        save("weather", {"status": "pending", "reason": "no key on server"})
+        for n in ("weather", "air", "stations", "evcharger"):
+            save(n, {"status": "pending", "reason": "no key on server"})
         return
     collect_weather(key)
+    collect_air(key)
+    collect_stations(key)
+    collect_evcharger(key)
 
 
 if __name__ == "__main__":
