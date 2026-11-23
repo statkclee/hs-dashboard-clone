@@ -110,6 +110,68 @@ h1 { color: #fff; }
 .synth-note { color: #ffd9b3; background: rgba(236,103,8,.12); border: 1px solid var(--orange);
   border-radius: 6px; padding: .55rem .8rem; margin-bottom: .9rem; font-size: .85rem; }
 
+/* ===== 홈 3단 레이아웃(원본 재현) ===== */
+.home-left { display: flex; flex-direction: column; gap: 14px; }
+.home-left > .card { margin: 0; }
+.map-card .card-body { padding: 0; }
+.map-card iframe { height: 760px !important; width: 100%; }
+
+/* 좌상단 미니 날씨 */
+.wcard .mini-temp { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; }
+.mini-unit { font-size: 1.1rem; color: var(--muted); margin-left: 2px; }
+.mini-sky { margin-left: 10px; color: var(--muted); font-size: .95rem; }
+.mini-badges { display: flex; gap: 10px; margin-top: 10px; }
+.mini-badges > div { display: flex; align-items: center; gap: 6px; }
+.mini-lab { color: var(--muted); font-size: .85rem; }
+.mini-badge { color: #fff; font-weight: 700; font-size: .78rem; padding: 2px 8px; border-radius: 10px; }
+
+/* 인구 카드(오렌지) */
+.pop-card { position: relative; overflow: hidden; border-radius: 10px; padding: 16px 18px;
+  background: linear-gradient(135deg, var(--orange-hot) 0%, var(--orange-hot) 58%, var(--peach) 100%);
+  box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.pop-label { color: #fff3ea; font-weight: 700; font-size: 1rem; }
+.pop-num { color: #fff; font-weight: 800; font-size: 2.1rem; letter-spacing: -.02em; margin-top: 4px; }
+.pop-unit { font-size: 1.1rem; font-weight: 700; margin-left: 3px; }
+.pop-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); opacity: .28; }
+.pop-icon svg { width: 66px; height: 66px; fill: #fff; }
+
+/* 위상 카드 그리드 */
+.st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.st-card { background: rgba(255,255,255,.05); border: 1px solid var(--rule); border-radius: 8px;
+  padding: 10px 12px; }
+.st-rank { color: var(--orange-hot); font-weight: 800; font-size: .82rem; }
+.st-name { color: var(--muted); font-size: .82rem; margin-top: 2px; }
+.st-val { color: #fff; font-weight: 800; font-size: 1.02rem; margin-top: 3px; letter-spacing: -.01em; }
+
+/* ===== 우측 날씨·대기 상세 패널 ===== */
+.wa-card .card-header { border-left-color: var(--blue2) !important; }
+.wa-temprow { display: flex; align-items: stretch; gap: 10px; margin: 8px 0 6px; }
+.wa-now { flex: 1.3; background: rgba(44,103,223,.14); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; }
+.wa-big { font-size: 2.6rem; font-weight: 800; color: #fff; line-height: 1; }
+.wa-bigunit { font-size: 1.1rem; color: var(--muted); }
+.wa-cap { color: var(--muted); font-size: .76rem; }
+.wa-mmbox { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 10px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+.wa-mm { font-size: 1.5rem; font-weight: 800; }
+.wa-min { color: #6db6ff; } .wa-max { color: #ff9a6b; }
+.wa-condrow, .wa-envrow { display: flex; gap: 10px; margin: 6px 0; }
+.wa-cond, .wa-env { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--rule);
+  border-radius: 8px; padding: 8px 10px; text-align: center; }
+.wa-condv, .wa-envv { color: #fff; font-weight: 700; font-size: .98rem; margin-top: 2px; }
+.wa-sec { color: #fff; font-weight: 700; font-size: .9rem; margin: 14px 0 6px; padding-left: 8px;
+  border-left: 3px solid var(--orange-hot); }
+
+/* 대기 현황 배지(이모지 + 등급 pill + 값) */
+.aq-row { display: flex; gap: 10px; }
+.aq-badge { flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 10px; text-align: center; }
+.aq-emo { font-size: 1.5rem; }
+.aq-name { color: var(--muted); font-size: .82rem; margin-right: 5px; }
+.aq-grade { color: #fff; font-size: .72rem; font-weight: 700; padding: 1px 7px; border-radius: 9px; }
+.aq-val { color: #fff; font-weight: 800; font-size: 1.15rem; }
+.aq-unit { color: var(--muted); font-size: .72rem; margin-left: 2px; }
+
 /* 반응형(4-6) — 고정 폭 금지. 좁은 폭에서 표는 가로 스크롤, 넓은 표는 카드 밖으로 안 넘침 */
 .card { overflow-x: auto; }
 table.tbl { min-width: 0; }

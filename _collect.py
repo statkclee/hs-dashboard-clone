@@ -48,9 +48,21 @@ def collect_weather(key: str) -> None:
         with urllib.request.urlopen(url, timeout=10) as r:
             body = json.loads(r.read())
         items = body["response"]["body"]["items"]["item"]
-        tmp = next((i["fcstValue"] for i in items if i["category"] == "TMP"), None)
-        save("weather", {"status": "ok" if tmp is not None else "error", "tempC": tmp})
-        print(f"weather 수집: {tmp}°C" if tmp is not None else "weather 실패(429 등)")
+        # 가장 이른 예보시각(현재에 가장 가까운) 기준으로 각 항목 선택
+        def first(cat):
+            vs = [i for i in items if i["category"] == cat]
+            return vs[0]["fcstValue"] if vs else None
+        def day_ext(cat):  # TMN/TMX 는 하루 중 특정 시각에만 — 아무 값
+            return next((i["fcstValue"] for i in items if i["category"] == cat), None)
+        tmp = first("TMP")
+        wx = {"status": "ok" if tmp is not None else "error", "tempC": tmp,
+              "tmin": day_ext("TMN"), "tmax": day_ext("TMX"),
+              "humidity": first("REH"), "windSpeed": first("WSD"),
+              "windDir": first("VEC"), "precip": first("PCP"),
+              "pop": first("POP"), "sky": first("SKY"), "pty": first("PTY")}
+        save("weather", wx)
+        print(f"weather 수집: {tmp}°C (최저 {wx['tmin']}/최고 {wx['tmax']}, 습도 {wx['humidity']}%)"
+              if tmp is not None else "weather 실패(429 등)")
     except Exception as e:  # 429 포함 — 키 노출 없이 상태만 기록
         save("weather", {"status": "error", "reason": type(e).__name__})
         print(f"weather 수집 실패: {type(e).__name__}")

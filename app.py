@@ -64,37 +64,61 @@ def value_box(title: str, value: str, icon: str) -> ui.Tag:
     return ui.value_box(title, value, showcase=icon_svg(icon), theme="bg-gradient-light")
 
 
+def _num(v):
+    try:
+        return float(v)
+    except Exception:
+        return None
+
+
+def air_grade(kind: str, v) -> tuple[str, str, str]:
+    """(등급, 색상, 이모지). 환경부 통합 기준."""
+    n = _num(v)
+    if n is None:
+        return ("—", "#9fb3c8", "·")
+    cuts = {"pm10": [30, 80, 150], "pm25": [15, 35, 75], "o3": [0.03, 0.09, 0.15]}[kind]
+    labels = ["좋음", "보통", "나쁨", "매우나쁨"]
+    cols = ["#2fbf71", "#2c9bf0", "#ef8a3b", "#e05353"]
+    emo = ["🙂", "😐", "😷", "😫"]
+    i = sum(1 for c in cuts if n > c)
+    return (labels[i], cols[i], emo[i])
+
+
+SKY = {"1": "맑음", "3": "구름많음", "4": "흐림"}
+PTY = {"0": "없음", "1": "비", "2": "비/눈", "3": "눈", "4": "소나기"}
+
+
+def pop_card() -> ui.Tag:
+    """인구 카드 — 원본 오렌지 그라데이션 + 큰 숫자."""
+    return ui.div(
+        ui.div("인구", class_="pop-label"),
+        ui.div("1,074,002", ui.span("명", class_="pop-unit"), class_="pop-num"),
+        ui.div(icon_svg("users"), class_="pop-icon"),
+        class_="pop-card",
+    )
+
+
 def home_panel() -> ui.Tag:
+    left = ui.div(
+        ui.card(ui.card_header(ui.HTML("&#128205; 화성시")),
+                ui.output_ui("weather_mini"), class_="wcard"),
+        pop_card(),
+        ui.card(ui.card_header("이 달의 행사"), ui.output_ui("events")),
+        ui.card(ui.card_header("제부도 바닷길"), ui.output_ui("tide")),
+        ui.card(ui.card_header("화성특례시의 위상"), ui.output_ui("status_cards")),
+        class_="home-left",
+    )
+    center = ui.card(
+        ui.card_header("읍면동 인구 지도 — 공개 행정동 GeoJSON (네이버 키 불필요)"),
+        ui.output_ui("pop_map"), class_="map-card", height="820px",
+    )
+    right = ui.card(
+        ui.card_header("날씨 · 대기"),
+        ui.output_ui("weather_air_detail"), class_="wa-card",
+    )
     return ui.nav_panel(
         ui.span(nav_icon("홈"), " 홈"),
-        ui.layout_columns(
-            value_box("인구", "1,074,002명", "users"),
-            value_box("GRDP · 전국 1위", "90.4조원", "won-sign"),
-            value_box("고용률 · 경기 1위", "67.9%", "briefcase"),
-            value_box("출생아 · 전국 1위", "8,116명", "baby"),
-            value_box("공약 이행률", str(pledge_rate), "list-check"),
-            col_widths=(2, 3, 2, 2, 3), fill=False,
-        ),
-        ui.layout_columns(
-            ui.card(ui.card_header("화성시 날씨 · 대기"), ui.output_ui("weather")),
-            ui.card(ui.card_header("이 달의 행사"), ui.output_ui("events")),
-            ui.card(ui.card_header("화성특례시의 위상"), ui.output_ui("status")),
-            col_widths=(4, 4, 4),
-        ),
-        ui.layout_columns(
-            ui.card(ui.card_header("읍면동 인구 지도 — 공개 행정동 GeoJSON (네이버 키 불필요)"),
-                    ui.output_ui("pop_map"), height="460px"),
-            ui.card(ui.card_header("제부도 바닷길"), ui.output_ui("tide")),
-            col_widths=(8, 4),
-        ),
-        ui.layout_columns(
-            ui.card(ui.card_header("공약사업 — 분야별 추진 현황"), ui.output_ui("pledge_cat")),
-            ui.card(ui.card_header("공약 이행"),
-                    ui.div(ui.h1(f"{pledge_done} / {pledge_total}"),
-                           ui.p(f"이행 완료 · 이행률 {pledge_rate}", class_="muted"),
-                           class_="pledge-big")),
-            col_widths=(8, 4),
-        ),
+        ui.layout_columns(left, center, right, col_widths=(3, 5, 4)),
     )
 
 
@@ -321,28 +345,95 @@ app_ui = ui.page_navbar(
 
 
 def server(input, output, session):
+    def _badge(kind, label, v, unit):
+        g, col, emo = air_grade(kind, v)
+        return ui.div(
+            ui.span(emo, class_="aq-emo"),
+            ui.div(ui.span(label, class_="aq-name"),
+                   ui.span(g, class_="aq-grade", style=f"background:{col}")),
+            ui.div(ui.span(f"{v if v is not None else '—'}", class_="aq-val"),
+                   ui.span(unit, class_="aq-unit")),
+            class_="aq-badge")
+
     @render.ui
-    def weather():
+    def weather_mini():
         wx = snapshot("weather")
         air = snapshot("air")
         if wx.get("status") != "ok":
-            return ui.TagList(
-                ui.div("— °C", class_="pending"),
-                ui.p("서버 수집 대기 — 인증키가 서버에 설정되면 매시 수집됩니다. "
-                     "키는 브라우저로 전송하지 않습니다(원본의 노출·429 문제를 구조적으로 제거).",
-                     class_="collect-note"),
-            )
-        parts = [ui.h1(f"{wx['tempC']}°C")]
+            return ui.TagList(ui.div("— °C", class_="mini-temp"),
+                              ui.p("서버 수집 대기 — 키는 서버에만.", class_="collect-note"))
+        pm10 = air.get("pm10_avg") if air.get("status") == "ok" else None
+        pm25 = air.get("pm25_avg") if air.get("status") == "ok" else None
+        g10, c10, _ = air_grade("pm10", pm10)
+        g25, c25, _ = air_grade("pm25", pm25)
+        return ui.TagList(
+            ui.div(ui.span(f"{wx['tempC']}", class_="mini-temp"), ui.span("°C", class_="mini-unit"),
+                   ui.span(SKY.get(str(wx.get("sky")), ""), class_="mini-sky")),
+            ui.div(
+                ui.div(ui.span("초미세", class_="mini-lab"),
+                       ui.span(g25, class_="mini-badge", style=f"background:{c25}")),
+                ui.div(ui.span("미세", class_="mini-lab"),
+                       ui.span(g10, class_="mini-badge", style=f"background:{c10}")),
+                class_="mini-badges"),
+        )
+
+    @render.ui
+    def weather_air_detail():
+        wx = snapshot("weather")
+        air = snapshot("air")
+        if wx.get("status") != "ok":
+            return ui.p("서버 수집 대기 — 인증키가 서버에 설정되면 매시 수집(키는 서버에만).",
+                        class_="collect-note")
+        # 오존 평균(측정소)
+        o3 = None
         if air.get("status") == "ok":
-            parts.append(ui.div(
-                ui.span(f"초미세 {air.get('pm25_avg')} ", class_="muted"),
-                ui.span(f"· 미세 {air.get('pm10_avg')} µg/m³ ", class_="muted"),
-                ui.span(f"· 측정소 {air.get('n')}곳", class_="muted small")))
-            st = pd.DataFrame(air["stations"])[["station", "pm10", "pm25", "o3"]]
-            st.columns = ["측정소", "미세(PM10)", "초미세(PM2.5)", "오존"]
-            parts.append(df_to_table(st))
-        parts.append(ui.p(f"서버 수집 {wx.get('collectedAt','')} · 키는 서버에만", class_="muted small"))
-        return ui.TagList(*parts)
+            vals = [_num(s.get("o3")) for s in air["stations"] if _num(s.get("o3")) is not None]
+            o3 = round(sum(vals) / len(vals), 3) if vals else None
+        base_dt = f"기준: {wx.get('collectedAt','')}"
+        temp_row = ui.div(
+            ui.div(ui.span(f"{wx['tempC']}", class_="wa-big"), ui.span("°C", class_="wa-bigunit"),
+                   ui.div("현재기온", class_="wa-cap"), class_="wa-now"),
+            ui.div(ui.div("최저", class_="wa-cap"), ui.div(f"{wx.get('tmin','—')}°", class_="wa-mm wa-min"),
+                   class_="wa-mmbox"),
+            ui.div(ui.div("최고", class_="wa-cap"), ui.div(f"{wx.get('tmax','—')}°", class_="wa-mm wa-max"),
+                   class_="wa-mmbox"),
+            class_="wa-temprow")
+        cond_row = ui.div(
+            ui.div(ui.div("하늘", class_="wa-cap"), ui.div(SKY.get(str(wx.get("sky")), "—"), class_="wa-condv"), class_="wa-cond"),
+            ui.div(ui.div("강수", class_="wa-cap"), ui.div(PTY.get(str(wx.get("pty")), "—"), class_="wa-condv"), class_="wa-cond"),
+            ui.div(ui.div("강수확률", class_="wa-cap"), ui.div(f"{wx.get('pop','—')}%", class_="wa-condv"), class_="wa-cond"),
+            class_="wa-condrow")
+        aq = ui.div(ui.div("대기 현황", class_="wa-sec"),
+                    ui.div(_badge("pm25", "초미세", air.get("pm25_avg") if air.get("status")=="ok" else None, "㎍/㎥"),
+                           _badge("pm10", "미세", air.get("pm10_avg") if air.get("status")=="ok" else None, "㎍/㎥"),
+                           _badge("o3", "오존", o3, "ppm"),
+                           class_="aq-row"))
+        env_row = ui.div(ui.div("기상", class_="wa-sec"),
+            ui.div(
+                ui.div(ui.div("습도", class_="wa-cap"), ui.div(f"{wx.get('humidity','—')}%", class_="wa-envv"), class_="wa-env"),
+                ui.div(ui.div("풍속", class_="wa-cap"), ui.div(f"{wx.get('windSpeed','—')} ㎧", class_="wa-envv"), class_="wa-env"),
+                ui.div(ui.div("강수량", class_="wa-cap"), ui.div(f"{wx.get('precip','—')}", class_="wa-envv"), class_="wa-env"),
+                class_="wa-envrow"))
+        st = pd.DataFrame(air["stations"])[["station", "pm10", "pm25", "o3"]] if air.get("status")=="ok" else None
+        tbl = []
+        if st is not None:
+            st.columns = ["측정소", "미세", "초미세", "오존"]
+            tbl = [ui.div("측정소별 실시간", class_="wa-sec"), df_to_table(st)]
+        return ui.TagList(ui.p(base_dt, class_="muted small"), temp_row, cond_row, aq, env_row, *tbl,
+                          ui.p("키는 서버에만 · 방문자 수와 무관하게 서버가 주기 수집(원본 429 문제 제거).",
+                               class_="muted small"))
+
+    @render.ui
+    def status_cards():
+        d = wi.copy()
+        cards = []
+        for _, r in d.iterrows():
+            cards.append(ui.div(
+                ui.div(f"{r['순위범위']} {r['순위']}위", class_="st-rank"),
+                ui.div(str(r["지표"]), class_="st-name"),
+                ui.div(str(r["값표기"]), class_="st-val"),
+                class_="st-card"))
+        return ui.div(*cards, class_="st-grid")
 
     @render.ui
     def pop_map():
