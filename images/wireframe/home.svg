@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="Apple SD Gothic Neo, Pretendard, NanumGothic, sans-serif">
+  <title>홈 화면 와이어프레임 — 화성특례시 대시보드 복제본</title>
+  <rect id="bg" x="0" y="0" width="1200" height="760" fill="#ffffff"/>
+  <style>
+    .box{fill:#fff;stroke:#bbb;stroke-width:1}
+    .ph{fill:#f4f4f4;stroke:#cfcfcf;stroke-dasharray:4 3}
+    .lbl{font-size:13px;fill:#111;font-weight:700}
+    .sub{font-size:11px;fill:#888}
+    .bind{font-size:10.5px;fill:#a63d2f}
+    .nav{fill:#eef1f5;stroke:#bbb}
+  </style>
+
+  <text x="24" y="28" font-size="17" font-weight="800" fill="#111">홈 (Home) — 와이어프레임</text>
+  <text x="24" y="46" class="sub">회색 점선 = 플레이스홀더 · 붉은 글씨 = 데이터 바인딩(data/…) · 상단은 공통 내비게이션</text>
+
+  <!-- nav -->
+  <rect x="24" y="58" width="1152" height="40" class="nav"/>
+  <text x="40" y="83" class="lbl">로고</text>
+  <g class="sub" font-size="12">
+    <text x="300" y="83">도시현황</text><text x="380" y="83">행정현황</text><text x="460" y="83">사업관리</text>
+    <text x="540" y="83">재난/안전</text><text x="630" y="83">교통</text><text x="690" y="83">문화/관광</text><text x="780" y="83">통합돌봄</text>
+  </g>
+  <text x="1120" y="83" class="sub" font-size="12">시각</text>
+
+  <!-- 좌측 열 -->
+  <rect x="24" y="110" width="300" height="130" class="box"/>
+  <text x="36" y="132" class="lbl">화성시 날씨</text>
+  <rect x="36" y="142" width="120" height="70" class="ph"/>
+  <text x="46" y="182" class="sub">기온 °C</text>
+  <text x="170" y="160" class="sub">초미세/미세</text>
+  <text x="36" y="230" class="bind">snapshot/weather.json (서버 수집)</text>
+
+  <rect x="24" y="250" width="300" height="200" class="box"/>
+  <text x="36" y="272" class="lbl">이 달의 행사</text>
+  <line x1="36" y1="284" x2="312" y2="284" stroke="#e6e6e6"/>
+  <line x1="36" y1="312" x2="312" y2="312" stroke="#eee"/><line x1="36" y1="340" x2="312" y2="340" stroke="#eee"/>
+  <line x1="36" y1="368" x2="312" y2="368" stroke="#eee"/><line x1="36" y1="396" x2="312" y2="396" stroke="#eee"/>
+  <text x="36" y="440" class="bind">행사.csv</text>
+
+  <rect x="24" y="460" width="300" height="120" class="box"/>
+  <text x="36" y="482" class="lbl">제부도 바닷길</text>
+  <rect x="36" y="494" width="128" height="60" class="ph"/><rect x="176" y="494" width="128" height="60" class="ph"/>
+  <text x="36" y="572" class="bind">제부도물때.csv</text>
+
+  <rect x="24" y="590" width="300" height="146" class="box"/>
+  <text x="36" y="612" class="lbl">화성특례시의 위상 (순위 카드)</text>
+  <g class="ph"><rect x="36" y="624" width="88" height="44"/><rect x="134" y="624" width="88" height="44"/><rect x="232" y="624" width="80" height="44"/>
+    <rect x="36" y="676" width="88" height="44"/><rect x="134" y="676" width="88" height="44"/><rect x="232" y="676" width="80" height="44"/></g>
+  <text x="36" y="732" class="bind">위상카드-다모아.csv · 위상지표.csv</text>
+
+  <!-- 중앙 지도 -->
+  <rect x="340" y="110" width="520" height="470" class="box"/>
+  <text x="352" y="132" class="lbl">지도 — 권역별 (NAVER → Leaflet/공개 GeoJSON)</text>
+  <rect x="352" y="142" width="496" height="420" class="ph"/>
+  <text x="600" y="355" text-anchor="middle" class="sub" font-size="14">행정경계 choropleth · 마커</text>
+  <rect x="364" y="156" width="150" height="26" fill="#fff" stroke="#cfcfcf"/><text x="374" y="173" class="sub">권역: 인구분포/증감</text>
+  <text x="352" y="578" class="bind">GeoJSON(읍면동/구) + 인구·대기 스냅숏</text>
+
+  <!-- 중앙 하단 공약 -->
+  <rect x="340" y="590" width="520" height="146" class="box"/>
+  <text x="352" y="612" class="lbl">공약사업 추진 현황</text>
+  <rect x="352" y="624" width="150" height="100" class="ph"/><text x="360" y="678" class="sub">이행률 게이지</text>
+  <rect x="520" y="624" width="328" height="100" class="ph"/><text x="540" y="678" class="sub">분야별 표</text>
+  <text x="352" y="732" class="bind">공약사업-요약.csv · 공약사업-분야별.csv</text>
+
+  <!-- 우측 날씨·대기 패널 -->
+  <rect x="876" y="110" width="300" height="626" class="box"/>
+  <text x="888" y="132" class="lbl">날씨 · 대기</text>
+  <rect x="888" y="142" width="276" height="70" class="ph"/><text x="900" y="182" class="sub">기온 · 최고 · 최저</text>
+  <rect x="888" y="222" width="132" height="70" class="ph"/><rect x="1032" y="222" width="132" height="70" class="ph"/>
+  <text x="900" y="262" class="sub">자외선</text><text x="1044" y="262" class="sub">대기확산</text>
+  <rect x="888" y="302" width="276" height="120" class="ph"/><text x="900" y="366" class="sub">대기 현황(초미세·미세·오존·습도·풍속·강우)</text>
+  <rect x="888" y="432" width="276" height="90" class="ph"/><text x="900" y="480" class="sub">대기 오염 — 서부/동부 권역</text>
+  <rect x="888" y="532" width="276" height="150" class="ph"/><text x="900" y="610" class="sub">측정소 목록</text>
+  <text x="888" y="710" class="bind">에어코리아 스냅숏(서버 수집) · 측정소 CSV</text>
+  <text x="888" y="728" class="bind">키는 서버에만 — 브라우저로 미전송</text>
+</svg>

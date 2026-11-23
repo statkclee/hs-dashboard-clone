@@ -1,0 +1,33 @@
+/* 화성 대시보드 복제본 — 회색조 + 강조색 하나. 연구 노트 규칙과 일관. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root { --ink:#1f1f1f; --muted:#6b6b6b; --rule:#e6e6e6; --accent:#a63d2f; }
+
+body, .navbar { font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "NanumGothic", sans-serif; }
+body { color: var(--ink); word-break: keep-all; }
+
+.navbar { background: #273449 !important; }
+.navbar .navbar-brand, .navbar .nav-link { color: #fff !important; }
+.navbar .nav-link.active { color: #fff !important; border-bottom: 2px solid var(--accent); }
+
+.card { border-color: var(--rule); }
+.card-header { font-weight: 700; color: #111; background: #fafafa; border-bottom: 1px solid var(--rule); }
+
+.value-box .value-box-value { font-weight: 800; letter-spacing: -0.02em; }
+
+/* 표 */
+table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.tbl th { color: var(--muted); font-weight: 700; text-align: left; border-bottom: 1px solid #111; padding: 6px 8px; white-space: nowrap; }
+table.tbl td { padding: 5px 8px; border-bottom: 1px solid #efefef; vertical-align: top; }
+
+/* 날씨 서버 수집 안내 */
+.pending { font-size: 1.8rem; font-weight: 800; color: #9a9a9a; }
+.collect-note { color: var(--accent); font-size: .82rem; border-left: 2px solid var(--accent); padding-left: .6rem; margin-top: .4rem; }
+.muted { color: var(--muted); } .small { font-size: .78rem; }
+
+.map-placeholder { height: 360px; display: flex; align-items: center; justify-content: center;
+  color: #9a9a9a; background: repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 10px,#f1f1f1 10px,#f1f1f1 20px);
+  border: 1px dashed #cfcfcf; border-radius: 6px; }
+
+.pledge-big { text-align: center; padding: 1rem; }
+.pledge-big h1 { font-size: 3rem; font-weight: 800; margin: 0; }
