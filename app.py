@@ -72,9 +72,8 @@ def home_panel() -> ui.Tag:
             col_widths=(4, 4, 4),
         ),
         ui.layout_columns(
-            ui.card(ui.card_header("지도 — 권역별 (Leaflet + 공개 GeoJSON · 다음 단계)"),
-                    ui.div("지도 자리 — 공개 행정경계 GeoJSON으로 구현 예정",
-                           class_="map-placeholder")),
+            ui.card(ui.card_header("읍면동 인구 지도 — 공개 행정동 GeoJSON (네이버 키 불필요)"),
+                    ui.output_ui("pop_map"), height="460px"),
             ui.card(ui.card_header("제부도 바닷길"), ui.output_ui("tide")),
             col_widths=(8, 4),
         ),
@@ -87,6 +86,36 @@ def home_panel() -> ui.Tag:
             col_widths=(8, 4),
         ),
     )
+
+
+def pop_map_html() -> str:
+    """읍면동 인구 choropleth — 공개 행정동 GeoJSON(vuski/admdongkor) + 인구 스냅숏.
+    네이버 키 불필요. 동 이름으로 조인."""
+    import folium
+    pop = snapshot("population")
+    geo = DATA / "geo" / "hwaseong_emd.geojson"
+    m = folium.Map(location=[37.17, 126.92], zoom_start=10,
+                   tiles="OpenStreetMap", control_scale=True)
+    if not geo.exists():
+        return m._repr_html_()
+    gj = json.loads(geo.read_text(encoding="utf-8"))
+    pm = {d["dong"]: d["total"] for d in pop.get("dongs", [])} if pop.get("status") == "ok" else {}
+    if pm:
+        df = pd.DataFrame({"dong": list(pm), "pop": list(pm.values())})
+        folium.Choropleth(
+            geo_data=gj, data=df, columns=["dong", "pop"],
+            key_on="feature.properties.dong",
+            fill_color="YlOrRd", fill_opacity=0.75, line_color="#ffffff",
+            line_weight=1, nan_fill_color="#cccccc",
+            legend_name="읍면동 주민등록 인구(명)").add_to(m)
+    # 동 이름 + 인구 툴팁
+    for f in gj["features"]:
+        f["properties"]["pop_fmt"] = f"{pm.get(f['properties']['dong'], 0):,}명"
+    folium.GeoJson(
+        gj, style_function=lambda x: {"fillOpacity": 0, "weight": 0},
+        tooltip=folium.GeoJsonTooltip(fields=["dong", "pop_fmt"],
+                                      aliases=["읍면동", "인구"])).add_to(m)
+    return m._repr_html_()
 
 
 def ev_map_html() -> str:
@@ -138,6 +167,40 @@ def city_panel() -> ui.Tag:
     )
 
 
+def safety_panel() -> ui.Tag:
+    air = snapshot("air")
+    ls = snapshot("landslide")
+    pm = air.get("pm10_avg") if air.get("status") == "ok" else None
+    nls = ls.get("n", 0) if ls.get("status") == "ok" else 0
+    return ui.nav_panel(
+        "재난/안전",
+        ui.layout_columns(
+            value_box("미세먼지(PM10) 평균", f"{pm} µg/m³" if pm is not None else "— (수집 대기)", "wind"),
+            value_box("초미세먼지(PM2.5) 평균",
+                      f"{air.get('pm25_avg')} µg/m³" if air.get("status") == "ok" else "—", "smog"),
+            value_box("산사태우려지역", f"{nls}곳" if ls.get("status") == "ok" else "— (수집 대기)",
+                      "mountain"),
+            col_widths=(4, 4, 4), fill=False),
+        ui.layout_columns(
+            ui.card(ui.card_header("실시간 대기질 — 화성시 측정소"), ui.output_ui("air_table")),
+            ui.card(ui.card_header("산사태우려지역 — 화성시 (safetydata)"), ui.output_ui("ls_table")),
+            col_widths=(7, 5),
+        ),
+    )
+
+
+def culture_panel() -> ui.Tag:
+    return ui.nav_panel(
+        "문화/관광",
+        ui.layout_columns(
+            ui.card(ui.card_header("이 달의 행사"), ui.output_ui("events2")),
+            ui.card(ui.card_header("제부도 바닷길 물때"), ui.output_ui("tide2")),
+            col_widths=(7, 5),
+        ),
+        ui.card(ui.card_header("국제교류도시 · 자매·우호도시"), ui.output_ui("sister")),
+    )
+
+
 def stub_panel(name: str) -> ui.Tag:
     return ui.nav_panel(name, ui.card(ui.card_header(name),
         ui.p(f"{name} 화면 — 와이어프레임(images/wireframe/menus.svg)에 따라 구현 예정.", class_="muted")))
@@ -148,6 +211,10 @@ def panel_for(name: str) -> ui.Tag:
         return traffic_panel()
     if name == "도시현황":
         return city_panel()
+    if name == "재난/안전":
+        return safety_panel()
+    if name == "문화/관광":
+        return culture_panel()
     return stub_panel(name)
 
 
@@ -188,6 +255,10 @@ def server(input, output, session):
         return ui.TagList(*parts)
 
     @render.ui
+    def pop_map():
+        return ui.HTML(pop_map_html())
+
+    @render.ui
     def pop_table():
         pop = snapshot("population")
         if pop.get("status") != "ok":
@@ -224,6 +295,43 @@ def server(input, output, session):
     @render.ui
     def pledge_cat():
         return df_to_table(pc)
+
+    @render.ui
+    def air_table():
+        air = snapshot("air")
+        if air.get("status") != "ok":
+            return ui.p("서버 수집 대기", class_="collect-note")
+        st = pd.DataFrame(air["stations"])[["station", "pm10", "pm25", "o3"]]
+        st.columns = ["측정소", "미세(PM10)", "초미세(PM2.5)", "오존"]
+        return ui.TagList(ui.p(f"측정소 {air.get('n')}곳 · 수집 {air.get('collectedAt','')}",
+                               class_="muted small"), df_to_table(st))
+
+    @render.ui
+    def ls_table():
+        ls = snapshot("landslide")
+        if ls.get("status") != "ok":
+            return ui.p("서버 수집 대기", class_="collect-note")
+        if not ls["items"]:
+            return ui.p("화성시 산사태우려지역 지정 없음(평지).", class_="muted")
+        df = pd.DataFrame(ls["items"])
+        return ui.TagList(ui.p(f"전국 {ls.get('nationwide')}건 중 화성 {ls['n']}곳",
+                               class_="muted small"), df_to_table(df))
+
+    @render.ui
+    def events2():
+        return df_to_table(ev)
+
+    @render.ui
+    def tide2():
+        return df_to_table(ti)
+
+    @render.ui
+    def sister():
+        try:
+            si = load("교류도시.csv")
+        except Exception:
+            return ui.p("교류도시 데이터 없음", class_="muted")
+        return df_to_table(si)
 
 
 app = App(app_ui, server)

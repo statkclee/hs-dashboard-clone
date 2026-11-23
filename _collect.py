@@ -161,6 +161,51 @@ def collect_population(key: str) -> None:
         print(f"population 수집 실패: {type(e).__name__}")
 
 
+def collect_landslide(key: str) -> None:
+    """산사태우려지역(safetydata DSSP-IF-10694) — 전국에서 화성(법정동 4159…)만 필터.
+    별도 키 SAFETY_LANDSLIDE_KEY. 서비스가 sigunguCd 필터를 무시하므로 클라이언트 필터."""
+    base = "https://www.safetydata.go.kr/V2/api/DSSP-IF-10694"
+    try:
+        rows, page = [], 1
+        while True:
+            q = {"serviceKey": key, "numOfRows": 1000, "pageNo": page, "type": "json"}
+            data = _get(base + "?" + urllib.parse.urlencode(q))
+            body = data.get("body") or []
+            if not body:
+                break
+            rows += body
+            if len(rows) >= int(data.get("totalCount", 0)) or page > 10:
+                break
+            page += 1
+        hs = [r for r in rows if str(r.get("STDG_CD", "")).startswith("4159")]
+        clean = [{"읍면동법정코드": r.get("STDG_CD"), "지명": r.get("PPLRLYKNWN_NM"),
+                  "예상피해": r.get("EXPC_DAM_ETC_CN")} for r in hs]
+        save("landslide", {"status": "ok", "items": clean, "n": len(clean),
+                           "nationwide": len(rows)})
+        print(f"landslide 수집: 화성 산사태우려지역 {len(clean)}곳 (전국 {len(rows)})")
+    except Exception as e:
+        save("landslide", {"status": "error", "reason": type(e).__name__})
+        print(f"landslide 수집 실패: {type(e).__name__}")
+
+
+def collect_parking(key: str) -> None:
+    """전국주차장표준데이터(15012896) — 화성시만. 승인 후 1~2h 활성화되면 수집됨."""
+    base = "https://api.data.go.kr/openapi/tn_pubr_public_prkplce_info_api"
+    try:
+        q = {"serviceKey": key, "type": "json", "numOfRows": 2000, "pageNo": 1}
+        data = _get(base + "?" + urllib.parse.urlencode(q))
+        items = (((data.get("response") or {}).get("body") or {}).get("items")) or []
+        hs = [i for i in items if "화성" in (i.get("instt_nm", "") + i.get("rdnmadr", "") + i.get("lnmadr", ""))]
+        clean = [{"name": i.get("prkplce_nm"), "addr": i.get("rdnmadr") or i.get("lnmadr"),
+                  "구분": i.get("prkplce_se"), "주차면수": i.get("prkcmprt_co"),
+                  "lat": i.get("latitude"), "lng": i.get("longitude")} for i in hs]
+        save("parking", {"status": "ok", "items": clean, "n": len(clean)})
+        print(f"parking 수집: 화성 주차장 {len(clean)}곳")
+    except Exception as e:
+        save("parking", {"status": "pending", "reason": type(e).__name__})
+        print(f"parking 수집 보류(활성화 대기 가능): {type(e).__name__}")
+
+
 def main() -> None:
     key = os.environ.get("DATA_GO_KR_KEY", "")
     if not key:
@@ -173,6 +218,12 @@ def main() -> None:
     collect_stations(key)
     collect_evcharger(key)
     collect_population(key)
+    collect_parking(key)
+    lk = os.environ.get("SAFETY_LANDSLIDE_KEY", "")
+    if lk:
+        collect_landslide(lk)
+    else:
+        print("SAFETY_LANDSLIDE_KEY 없음 — 산사태 수집 건너뜀.")
 
 
 if __name__ == "__main__":
