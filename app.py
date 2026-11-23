@@ -254,6 +254,28 @@ def admin_panel() -> ui.Tag:
     )
 
 
+def care_panel() -> ui.Tag:
+    ct = load("통합돌봄-유형별.csv")
+    total = int(ct["대상자수"].sum())
+    svc = int(ct["월평균 서비스건수"].sum())
+    return ui.nav_panel(
+        "바로이웃 통합돌봄",
+        ui.div("⚠ 합성(가상) 데이터 — 개인정보 비수집 원칙에 따라 실제 대상자 행은 수집하지 않고, "
+               "구조·화면 재현용 집계만 생성했습니다. 실데이터는 소관부서 승인·가명처리 후 연결.",
+               class_="synth-note"),
+        ui.layout_columns(
+            value_box("돌봄 대상자(합성)", f"{total:,}명", "hand-holding-heart"),
+            value_box("돌봄 유형", f"{len(ct)}종", "layer-group"),
+            value_box("월평균 서비스(합성)", f"{svc:,}건", "house-medical"),
+            col_widths=(4, 4, 4), fill=False),
+        ui.layout_columns(
+            ui.card(ui.card_header("돌봄 유형별 현황 (합성)"), ui.output_ui("care_type")),
+            ui.card(ui.card_header("읍면동별 대상자 분포 (합성)"), ui.output_ui("care_dong")),
+            col_widths=(6, 6),
+        ),
+    )
+
+
 def stub_panel(name: str) -> ui.Tag:
     return ui.nav_panel(name, ui.card(ui.card_header(name),
         ui.p(f"{name} 화면 — 와이어프레임(images/wireframe/menus.svg)에 따라 구현 예정.", class_="muted")))
@@ -272,6 +294,8 @@ def panel_for(name: str) -> ui.Tag:
         return business_panel()
     if name == "행정현황":
         return admin_panel()
+    if name == "바로이웃 통합돌봄":
+        return care_panel()
     return stub_panel(name)
 
 
@@ -393,6 +417,14 @@ def server(input, output, session):
     @render.ui
     def award_tbl():
         return df_to_table(aw)
+
+    @render.ui
+    def care_type():
+        return df_to_table(load("통합돌봄-유형별.csv"))
+
+    @render.ui
+    def care_dong():
+        return df_to_table(load("통합돌봄-읍면동.csv"))
 
     @render.ui
     def sister():
