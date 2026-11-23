@@ -102,13 +102,31 @@ def traffic_panel() -> ui.Tag:
     )
 
 
+def city_panel() -> ui.Tag:
+    pop = snapshot("population")
+    total = pop.get("total", 0) if pop.get("status") == "ok" else 0
+    return ui.nav_panel(
+        "도시현황",
+        ui.layout_columns(
+            value_box("주민등록 인구", f"{total:,}명" if total else "— (서버 수집 대기)", "users"),
+            value_box("읍면동", f"{pop.get('n', 0)}곳" if total else "—", "map-location-dot"),
+            col_widths=(4, 3), fill=False),
+        ui.card(ui.card_header(f"읍면동별 인구 — {pop.get('month', '')} 기준 (주민등록 내국인)"),
+                ui.output_ui("pop_table")),
+    )
+
+
 def stub_panel(name: str) -> ui.Tag:
     return ui.nav_panel(name, ui.card(ui.card_header(name),
         ui.p(f"{name} 화면 — 와이어프레임(images/wireframe/menus.svg)에 따라 구현 예정.", class_="muted")))
 
 
 def panel_for(name: str) -> ui.Tag:
-    return traffic_panel() if name == "교통" else stub_panel(name)
+    if name == "교통":
+        return traffic_panel()
+    if name == "도시현황":
+        return city_panel()
+    return stub_panel(name)
 
 
 app_ui = ui.page_navbar(
@@ -144,6 +162,16 @@ def server(input, output, session):
             parts.append(df_to_table(st))
         parts.append(ui.p(f"서버 수집 {wx.get('collectedAt','')} · 키는 서버에만", class_="muted small"))
         return ui.TagList(*parts)
+
+    @render.ui
+    def pop_table():
+        pop = snapshot("population")
+        if pop.get("status") != "ok":
+            return ui.p("서버 수집 대기", class_="collect-note")
+        df = pd.DataFrame(pop["dongs"]).sort_values("total", ascending=False)
+        df["total"] = df["total"].map(lambda v: f"{v:,}")
+        df.columns = ["읍면동", "인구"]
+        return df_to_table(df)
 
     @render.ui
     def ev_table():

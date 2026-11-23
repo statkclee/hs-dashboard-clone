@@ -130,6 +130,37 @@ def collect_evcharger(key: str) -> None:
         print(f"evcharger 수집 실패: {type(e).__name__}")
 
 
+def collect_population(key: str) -> None:
+    """행안부 행정동별 주민등록 인구(15108072) — 화성시 읍면동. 최신 가용월 자동 탐색."""
+    import datetime as _dt
+    base = "https://apis.data.go.kr/1741000/admmSexdAgePpltn/selectAdmmSexdAgePpltn"
+    today = _dt.date.today()
+    months = [(today.replace(day=1) - _dt.timedelta(days=28 * i)).strftime("%Y%m") for i in range(1, 7)]
+    try:
+        for ym in months:
+            q = {"serviceKey": key, "admmCd": "4159000000", "srchFrYm": ym, "srchToYm": ym,
+                 "lv": 3, "type": "JSON", "numOfRows": 100, "pageNo": 1}
+            try:
+                data = _get(base + "?" + urllib.parse.urlencode(q))
+            except Exception:
+                continue
+            items = data.get("Response", {}).get("items", "")
+            if isinstance(items, dict):
+                items = items.get("item", [])
+            if items:
+                dongs = [{"dong": i.get("dongNm"), "total": int(i.get("totNmprCnt") or 0)} for i in items]
+                dongs = [d for d in dongs if d["dong"]]
+                save("population", {"status": "ok", "month": ym, "dongs": dongs,
+                                    "total": sum(d["total"] for d in dongs), "n": len(dongs)})
+                print(f"population 수집: {ym} · 읍면동 {len(dongs)}곳 · 합계 {sum(d['total'] for d in dongs):,}")
+                return
+        save("population", {"status": "error", "reason": "no month available"})
+        print("population 수집 실패: 가용 월 없음")
+    except Exception as e:
+        save("population", {"status": "error", "reason": type(e).__name__})
+        print(f"population 수집 실패: {type(e).__name__}")
+
+
 def main() -> None:
     key = os.environ.get("DATA_GO_KR_KEY", "")
     if not key:
@@ -141,6 +172,7 @@ def main() -> None:
     collect_air(key)
     collect_stations(key)
     collect_evcharger(key)
+    collect_population(key)
 
 
 if __name__ == "__main__":
