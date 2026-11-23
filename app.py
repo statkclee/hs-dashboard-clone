@@ -25,6 +25,8 @@ ev = load("행사.csv")
 ti = load("제부도물때.csv")
 pl = load("공약사업-요약.csv")
 pc = load("공약사업-분야별.csv")
+st_ind = load("위상지표.csv")
+aw = load("수상실적.csv")
 pledge_rate = pl.loc[pl["항목"] == "이행률", "값"].iloc[0]
 pledge_done = pl.loc[pl["항목"] == "이행 완료", "값"].iloc[0]
 pledge_total = pl.loc[pl["항목"] == "전체 공약 수", "값"].iloc[0]
@@ -99,6 +101,18 @@ def pop_map_html() -> str:
     if not geo.exists():
         return m._repr_html_()
     gj = json.loads(geo.read_text(encoding="utf-8"))
+    # 화성시 경계에 맞춰 지도 확대
+    xs, ys = [], []
+    def _walk(c):
+        if c and isinstance(c[0], (int, float)):
+            xs.append(c[0]); ys.append(c[1])
+        else:
+            for x in c:
+                _walk(x)
+    for f in gj["features"]:
+        _walk(f["geometry"]["coordinates"])
+    if xs and ys:
+        m.fit_bounds([[min(ys), min(xs)], [max(ys), max(xs)]])
     pm = {d["dong"]: d["total"] for d in pop.get("dongs", [])} if pop.get("status") == "ok" else {}
     if pm:
         df = pd.DataFrame({"dong": list(pm), "pop": list(pm.values())})
@@ -115,6 +129,17 @@ def pop_map_html() -> str:
         gj, style_function=lambda x: {"fillOpacity": 0, "weight": 0},
         tooltip=folium.GeoJsonTooltip(fields=["dong", "pop_fmt"],
                                       aliases=["읍면동", "인구"])).add_to(m)
+    # 대기질 측정소 마커(공개 측정소 좌표)
+    stn = snapshot("stations")
+    if stn.get("status") == "ok":
+        for s in stn["stations"]:
+            try:
+                folium.CircleMarker(
+                    [float(s["lat"]), float(s["lng"])], radius=4,
+                    color="#167aff", fill=True, fill_color="#167aff", fill_opacity=0.9,
+                    popup=f"측정소 {s['station']}").add_to(m)
+            except Exception:
+                continue
     return m._repr_html_()
 
 
@@ -201,6 +226,34 @@ def culture_panel() -> ui.Tag:
     )
 
 
+def business_panel() -> ui.Tag:
+    return ui.nav_panel(
+        "사업관리",
+        ui.layout_columns(
+            value_box("전체 공약 수", f"{pledge_total}개", "list-check"),
+            value_box("이행 완료", f"{pledge_done}개", "circle-check"),
+            value_box("이행률", str(pledge_rate), "chart-line"),
+            col_widths=(4, 4, 4), fill=False),
+        ui.card(ui.card_header("공약사업 — 분야별 추진 현황 (민선8기)"), ui.output_ui("biz_cat")),
+    )
+
+
+def admin_panel() -> ui.Tag:
+    return ui.nav_panel(
+        "행정현황",
+        ui.layout_columns(
+            value_box("지방자치경쟁력", "종합 1위", "trophy"),
+            value_box("인구", "전국 4위", "ranking-star"),
+            value_box("재정·행정 수상", f"{len(aw)}건", "award"),
+            col_widths=(4, 4, 4), fill=False),
+        ui.layout_columns(
+            ui.card(ui.card_header("화성특례시 위상 지표"), ui.output_ui("stature_tbl")),
+            ui.card(ui.card_header("최근 수상·평가 실적"), ui.output_ui("award_tbl")),
+            col_widths=(6, 6),
+        ),
+    )
+
+
 def stub_panel(name: str) -> ui.Tag:
     return ui.nav_panel(name, ui.card(ui.card_header(name),
         ui.p(f"{name} 화면 — 와이어프레임(images/wireframe/menus.svg)에 따라 구현 예정.", class_="muted")))
@@ -215,6 +268,10 @@ def panel_for(name: str) -> ui.Tag:
         return safety_panel()
     if name == "문화/관광":
         return culture_panel()
+    if name == "사업관리":
+        return business_panel()
+    if name == "행정현황":
+        return admin_panel()
     return stub_panel(name)
 
 
@@ -324,6 +381,18 @@ def server(input, output, session):
     @render.ui
     def tide2():
         return df_to_table(ti)
+
+    @render.ui
+    def biz_cat():
+        return df_to_table(pc)
+
+    @render.ui
+    def stature_tbl():
+        return df_to_table(st_ind)
+
+    @render.ui
+    def award_tbl():
+        return df_to_table(aw)
 
     @render.ui
     def sister():
