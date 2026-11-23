@@ -30,13 +30,25 @@
 | 에어코리아 대기오염 | [15073861](https://www.data.go.kr/data/15073861/openapi.do) | 홈·재난안전 대기 | 측정소/시도 단위 |
 | 에어코리아 측정소정보 | [15073877](https://www.data.go.kr/data/15073877/openapi.do) | 측정소 좌표 | |
 | 전기차 충전소 | [15076352](https://www.data.go.kr/data/15076352/openapi.do) | 교통 | |
-| 산사태우려지역 | [15139656](https://www.data.go.kr/data/15139656/openapi.do) | 재난/안전 | |
-| 붕괴위험지역(급경사지) | [15139701](https://www.data.go.kr/data/15139701/openapi.do) | 재난/안전 | |
 | 관세청 시군구 수출입 | [15134344](https://www.data.go.kr/data/15134344/openapi.do) | 위상 | |
 | 워크넷 채용정보 | [3038225](https://www.data.go.kr/data/3038225/openapi.do) | 민간일자리 | 상업적 이용·변경 금지 |
 | 조위관측소 조위 | [15142507](https://www.data.go.kr/data/15142507/openapi.do) | 제부도(근사) | 바다갈라짐 공식 API 없음 |
 
 > 파일(CSV) 데이터(인구·주차장·복지시설·철도역 등)는 키가 아니라 **포털 다운로드**다. 받아서 `data/`에 둔다.
+
+## 1-B. 재난안전데이터공유플랫폼 (safetydata.go.kr) — 별도 키
+
+산사태·붕괴위험은 **data.go.kr가 아니라 safetydata.go.kr**에 있다. 회원가입·이용신청·인증키가 **data.go.kr와 별개**다.
+
+| 순서 | 할 일 |
+|---|---|
+| 1 | safetydata.go.kr 회원가입·로그인 |
+| 2 | "산사태우려지역"(DSSP-IF-10694) · "붕괴위험지역" 각각 **이용신청** |
+| 3 | 승인 후 **마이페이지 → 오픈API 인증키**에서 serviceKey 확인 |
+| 4 | 서버 환경변수 `SAFETYDATA_KEY`로 설정(저장소 밖) |
+
+- 엔드포인트: `https://www.safetydata.go.kr/V2/api/DSSP-IF-10694`(산사태). 붕괴위험은 별도 DSSP-IF 번호.
+- 이용허락: 공공누리 제3유형(공공기관 제공 데이터).
 
 ## 2. 경기데이터드림 (data.gg.go.kr) — 별도 키
 
