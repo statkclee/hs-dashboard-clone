@@ -1,0 +1,83 @@
+/* 화성 대시보드 복제본 — 디자인 토큰 (원본 BIX5 대시보드 관측값)
+   bg rgb(18,42,68)=#122A44 · 인구 rgb(255,120,24)→#ffc1aa · 날씨 rgb(44,103,223)=#2c67df
+   폰트: Pretendard(원본 동일) */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root {
+  --navy:    #122a44;   /* 배경 */
+  --navy2:   #0e2238;   /* 상단바/로고 */
+  --surface: #16314e;   /* 카드(반투명) */
+  --surface-solid: #16314e;
+  --blue:    #167aff;   /* 강조/활성 */
+  --blue2:   #2c67df;   /* 날씨·대기 */
+  --orange-hot: #ff7818;
+  --peach:   #ffc1aa;
+  --orange:  #ec6708;
+  --ink:     #eaf1f8;
+  --muted:   #9fb3c8;
+  --rule:    rgba(255,255,255,.12);
+  --good:    #2fbf71;
+  --normal:  #2c9bf0;
+  --bad:     #ef8a3b;
+  --vbad:    #e05353;
+  --radius:  10px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  color: var(--ink);
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--navy);
+  /* 원본 별자리/네트워크 배경 재현 */
+  background-image:
+    radial-gradient(1100px 460px at 72% -6%, rgba(40,96,170,.38), transparent 70%),
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.10) 1px, transparent 1.7px),
+    radial-gradient(circle at 37% 42%, rgba(255,255,255,.07) 1px, transparent 1.7px),
+    radial-gradient(circle at 63% 28%, rgba(255,255,255,.09) 1px, transparent 1.7px),
+    radial-gradient(circle at 85% 55%, rgba(255,255,255,.06) 1px, transparent 1.7px),
+    radial-gradient(circle at 22% 75%, rgba(255,255,255,.07) 1px, transparent 1.7px),
+    radial-gradient(circle at 78% 82%, rgba(255,255,255,.06) 1px, transparent 1.7px);
+  background-size: 100% 100%, 240px 240px, 300px 300px, 260px 260px, 320px 320px, 280px 280px, 340px 340px;
+  background-attachment: fixed;
+}
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+/* 카드 공통 */
+.card {
+  background: rgba(22,49,78,.82);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+.card > .card-h {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; color: #fff; font-size: .98rem;
+  padding: 11px 14px;
+  background: rgba(255,255,255,.04);
+  border-bottom: 1px solid var(--rule);
+  border-left: 4px solid var(--orange-hot);
+}
+.card > .card-b { padding: 14px; }
+
+/* 표 */
+table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; color: var(--ink); }
+table.tbl th { color: var(--muted); font-weight: 700; text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,.28); padding: 7px 8px; white-space: nowrap; }
+table.tbl td { padding: 6px 8px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.tbl tr:last-child td { border-bottom: 0; }
+
+.muted { color: var(--muted); }
+.small { font-size: .78rem; }
+.collect-note { color: #ffb37a; font-size: .82rem; border-left: 2px solid var(--orange);
+  padding-left: .6rem; margin: .4rem 0; }
+
+/* 스크롤바(다크) */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }

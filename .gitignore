@@ -6,3 +6,7 @@ data/snapshot/
 _freeze/
 .env
 .env.bak*
+node_modules/
+dist/
+.vite/
+public/data

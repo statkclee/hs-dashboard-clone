@@ -1,0 +1,21 @@
+{
+  "name": "hs-dashboard-clone",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "화성특례시 통합 대시보드 복제본 (Vue 3). 인증키는 서버(_collect.py)에만, 프론트는 스냅숏만 읽음.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4",
+    "papaparse": "5.4.1",
+    "vue": "3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "5.2.1",
+    "vite": "6.0.7"
+  }
+}
