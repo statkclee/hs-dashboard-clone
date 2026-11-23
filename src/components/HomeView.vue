@@ -10,6 +10,7 @@ import PopMap from './PopMap.vue'
 import WeatherAir from './WeatherAir.vue'
 import EventsList from './EventsList.vue'
 import TideCard from './TideCard.vue'
+import DateBar from './DateBar.vue'
 
 const wx = ref({}), air = ref({}), pop = ref({}), stations = ref({}), geo = ref(null)
 const events = ref([]), tide = ref([]), stature = ref([])
@@ -31,14 +32,21 @@ const tideRows = computed(() => tide.value.map((r) => [r['차수'], r['상태'],
 <template>
   <div class="home">
     <div class="col left">
-      <WeatherMini :wx="wx" :air="air" />
-      <PopCard />
-      <Card title="이 달의 행사">
-        <EventsList :rows="events" />
-      </Card>
-      <Card title="제부도 바닷길">
-        <TideCard :rows="tide" />
-      </Card>
+      <div class="pair">
+        <WeatherMini :wx="wx" :air="air" />
+        <div class="pop-col">
+          <DateBar />
+          <PopCard />
+        </div>
+      </div>
+      <div class="pair">
+        <Card title="이 달의 행사">
+          <EventsList :rows="events" />
+        </Card>
+        <Card title="제부도 바닷길">
+          <TideCard :rows="tide" />
+        </Card>
+      </div>
       <Card title="화성특례시의 위상">
         <StatureCards :rows="stature" />
       </Card>
@@ -57,10 +65,14 @@ const tideRows = computed(() => tide.value.map((r) => [r['차수'], r['상태'],
 </template>
 
 <style scoped>
-.home { display: grid; grid-template-columns: 3fr 5fr 4fr; gap: 14px; align-items: start; }
+.home { display: grid; grid-template-columns: minmax(420px, 1.25fr) 1.5fr 1fr; gap: 14px; align-items: start; }
 .col { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+/* 좌측 영역: 2열(화성시|인구, 행사|제부도), 위상은 전체폭 */
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.pop-col { display: flex; flex-direction: column; gap: 14px; }
 .mapcard :deep(.card-b) { padding: 0; }
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .home { grid-template-columns: 1fr; }
+  .pair { grid-template-columns: 1fr 1fr; }
 }
 </style>

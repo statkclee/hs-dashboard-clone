@@ -2,16 +2,19 @@
 import Icon from './Icon.vue'
 defineProps({ rows: Array })
 
-// 지표 → 아이콘·색 매핑(원본: 원형 아이콘 배지)
+// 지표 → 아이콘·색 매핑(원본 다모아 관측 기준)
 function mapIcon(ind = '') {
   if (ind.includes('아동') || ind.includes('출생')) return ['baby', '#ff9ab0']
-  if (ind.includes('수출')) return ['gear', '#35c6c6']
+  if (ind.includes('평균연령')) return ['family', '#8fb8ff']
   if (ind.includes('고용')) return ['briefcase', '#ffcf6b']
   if (ind.includes('사업체')) return ['building', '#9fd3ff']
   if (ind.includes('GRDP') || ind.includes('총생산')) return ['won', '#ffd166']
-  if (ind.includes('종사')) return ['family', '#8fb8ff']
-  if (ind.includes('평균연령') || ind.includes('젊')) return ['family', '#8fb8ff']
-  return ['family', '#8fb8ff'] // 인구수 등
+  // 인구수·제조업 종사자수·수출 등은 원본이 톱니 아이콘 사용
+  return ['gear', '#35c6c6']
+}
+function rankLabel(r) {
+  const base = `${r['순위범위']} ${r['순위']}위`
+  return r['비고'] ? `${base} (${r['비고']})` : base
 }
 </script>
 
@@ -22,7 +25,7 @@ function mapIcon(ind = '') {
         <Icon :name="mapIcon(r['지표'])[0]" :size="28" :style="{ color: mapIcon(r['지표'])[1] }" />
       </div>
       <div class="info">
-        <div class="rank">{{ r['순위범위'] }} {{ r['순위'] }}위</div>
+        <div class="rank">{{ rankLabel(r) }}</div>
         <div class="metric">{{ r['지표'] }}/<b>{{ r['값표기'] }}</b></div>
       </div>
     </div>
