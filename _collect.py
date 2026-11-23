@@ -11,7 +11,24 @@ from __future__ import annotations
 import json, os, datetime, urllib.parse, urllib.request
 from pathlib import Path
 
-SNAP = Path(__file__).parent / "data" / "snapshot"
+HERE = Path(__file__).parent
+
+
+def load_dotenv(path: Path) -> None:
+    """프로젝트 .env(gitignore)에서 KEY=VALUE를 환경변수로. 외부 의존성 없음.
+    이미 설정된 환경변수는 덮어쓰지 않는다(서버 Secret 우선)."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip().strip("'").strip('"'))
+
+
+load_dotenv(HERE / ".env")
+SNAP = HERE / "data" / "snapshot"
 SNAP.mkdir(parents=True, exist_ok=True)
 NOW = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
