@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { loadJSON, loadGeo } from '../../lib/data.js'
+import { loadJSON, loadGeo, loadCSV } from '../../lib/data.js'
 import MenuLayout from '../MenuLayout.vue'
 import Card from '../Card.vue'
 import StatTile from '../StatTile.vue'
+import DataTable from '../DataTable.vue'
 import BarLineChart from '../BarLineChart.vue'
 import LineChart from '../LineChart.vue'
 import PopMap from '../PopMap.vue'
@@ -18,10 +19,18 @@ const sub = ref('pop')
 
 const pop = ref({})
 const geo = ref(null)
+const sister = ref([])
 onMounted(async () => {
   try { pop.value = await loadJSON('population') } catch (e) { pop.value = {} }
   try { geo.value = await loadGeo('hwaseong_emd.geojson') } catch (e) { geo.value = null }
+  try { sister.value = (await loadCSV('교류도시.csv')) || [] } catch (e) { sister.value = [] }
 })
+const sisterCols = computed(() => (sister.value[0] ? Object.keys(sister.value[0]) : []))
+const sisterRows = computed(() => sister.value.map((r) => sisterCols.value.map((c) => r[c])))
+const sisterCount = computed(() => ({
+  dom: sister.value.filter((r) => (r['범위'] || '').includes('국내')).length,
+  intl: sister.value.filter((r) => (r['범위'] || '').includes('국외') || (r['범위'] || '').includes('해외')).length,
+}))
 
 const dongs = computed(() => (pop.value?.status === 'ok' ? pop.value.dongs : []))
 const labels = computed(() => dongs.value.map((d) => d.dong))
@@ -91,9 +100,20 @@ const trendSeries = [
       </Card>
     </div>
 
+    <div class="view" v-else-if="sub === 'sister'">
+      <div class="tiles">
+        <StatTile label="교류도시" :value="sister.length + '곳'" icon="family" accent />
+        <StatTile label="국내 자매·우호" :value="sisterCount.dom + '곳'" icon="pin" />
+        <StatTile label="국외 자매·우호" :value="sisterCount.intl + '곳'" icon="family" />
+      </div>
+      <Card title="국내외 교류도시 — 자매·우호도시">
+        <DataTable :cols="sisterCols" :rows="sisterRows" />
+      </Card>
+    </div>
+
     <div class="view" v-else>
       <Card :title="items.find((i) => i.key === sub)?.label">
-        <div class="cap">준비 중입니다.</div>
+        <div class="cap">해당 데이터 연동 예정입니다.</div>
       </Card>
     </div>
   </MenuLayout>

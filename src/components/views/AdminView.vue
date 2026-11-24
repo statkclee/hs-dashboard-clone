@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import MenuLayout from '../MenuLayout.vue'
 import Card from '../Card.vue'
 import Icon from '../Icon.vue'
+import DataTable from '../DataTable.vue'
+import StatTile from '../StatTile.vue'
 import { loadCSV } from '../../lib/data.js'
 
 const active = ref('stature')
@@ -30,11 +32,17 @@ const FALLBACK = [
 const SKIP = ['지방자치경쟁력지수', '재정자립도', '개발가능면적']
 const norm = (s) => String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, '')
 
+const awards = ref([])
 onMounted(async () => {
-  const [a, b] = await Promise.all([loadCSV('위상지표.csv'), loadCSV('위상카드-다모아.csv')])
+  const [a, b, c] = await Promise.all([
+    loadCSV('위상지표.csv'), loadCSV('위상카드-다모아.csv'), loadCSV('수상실적.csv'),
+  ])
   idx.value = a
   card.value = b
+  awards.value = c || []
 })
+const awardCols = computed(() => (awards.value[0] ? Object.keys(awards.value[0]) : []))
+const awardRows = computed(() => awards.value.map((r) => awardCols.value.map((c) => r[c])))
 
 const metrics = computed(() => {
   const out = []
@@ -104,8 +112,17 @@ const groups = computed(() =>
       </div>
     </template>
 
+    <template v-else-if="active === 'admin'">
+      <div class="tiles">
+        <StatTile label="최근 수상·평가 실적" :value="awards.length + '건'" icon="trophy" accent />
+      </div>
+      <Card title="시정현황 — 수상·평가 실적">
+        <DataTable :cols="awardCols" :rows="awardRows" />
+      </Card>
+    </template>
+
     <Card v-else :title="items.find((i) => i.key === active)?.label">
-      <div class="soon">준비 중</div>
+      <div class="soon">해당 데이터 연동 예정입니다.</div>
     </Card>
   </MenuLayout>
 </template>
@@ -135,4 +152,5 @@ const groups = computed(() =>
 .pill { background: var(--blue2, #2c67df); color: #fff; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
 .note { font-size: 12px; color: var(--muted); }
 .empty, .soon { color: var(--muted); padding: 24px 0; text-align: center; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
 </style>
