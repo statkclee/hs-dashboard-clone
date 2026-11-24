@@ -244,22 +244,21 @@ onBeforeUnmount(() => { destroyMap(); destroySlopeMap(); destroyLandMap() })
         <div class="tiles">
           <StatTile label="산사태 취약지역" :value="lfOk ? landFull.n + '곳' : '—'" icon="pin" accent />
           <StatTile label="1등급(최고위험)" :value="lfOk ? (lfGrades['1등급'] || 0) + '곳' : '—'" icon="pin" />
-          <StatTile label="산사태우려지역(지정)" :value="lsOk ? landslide.n + '곳' : '—'" icon="pin" />
+          <StatTile label="2등급" :value="lfOk ? (lfGrades['2등급'] || 0) + '곳' : '—'" icon="pin" />
         </div>
-        <Card title="산사태 취약지역 지도 — 화성시">
-          <div v-if="lfOk" ref="landMapEl" class="lmap"></div>
-          <p v-else class="muted">수집 대기</p>
-          <p class="cap">{{ lfOk ? landFull.n : '—' }}곳 · 산사태위험등급 1~3 · 출처: 산사태 취약지역(다모아 공개 표시값)</p>
-        </Card>
-        <Card title="산사태 취약지역 목록">
-          <DataTable v-if="lfOk" :cols="['산사태등급', '읍면동', '주소']" :rows="lfRows" />
-          <p v-else class="muted">수집 대기</p>
-        </Card>
-        <Card title="산사태우려지역 — 화성시 (safetydata)">
-          <p v-if="!lsOk" class="muted">수집 대기</p>
-          <p v-else-if="!landslide.n" class="muted">화성시 산사태우려지역 지정 없음.</p>
-          <DataTable v-else :cols="['읍면동법정코드', '지명', '예상피해']" :rows="lsRows" />
-        </Card>
+        <div class="cols">
+          <Card title="산사태 취약지역 지도 — 화성시">
+            <div v-if="lfOk" ref="landMapEl" class="lmap"></div>
+            <p v-else class="muted">수집 대기</p>
+            <p class="cap">{{ lfOk ? landFull.n : '—' }}곳 · 산사태위험등급 1~3 · 출처: 산사태 취약지역(다모아 공개 표시값)</p>
+          </Card>
+          <Card title="산사태 취약지역 목록">
+            <div class="list-scroll">
+              <DataTable v-if="lfOk" :cols="['산사태등급', '읍면동', '주소']" :rows="lfRows" />
+              <p v-else class="muted">수집 대기</p>
+            </div>
+          </Card>
+        </div>
       </template>
 
       <!-- 급경사지 -->
@@ -296,6 +295,9 @@ onBeforeUnmount(() => { destroyMap(); destroySlopeMap(); destroyLandMap() })
 <style scoped>
 .view { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+.cols { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; align-items: start; }
+.list-scroll { max-height: 486px; overflow-y: auto; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
 .lmap { height: 460px; width: 100%; border-radius: 8px; overflow: hidden; }
 .muted { color: var(--muted); margin: 0; }
 .cap { color: var(--muted); font-size: .82rem; margin: 0 0 8px; }
