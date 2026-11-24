@@ -34,8 +34,6 @@ const bars = [
 
 <template>
   <MenuLayout v-model="active" icon="people" title="바로이웃 통합돌봄" :items="items">
-    <div class="layout">
-      <div class="main">
     <div class="view" v-if="active === 'target'">
       <div class="note">공개 집계값(개인정보 미수집) · 기준일 2025-12-31</div>
 
@@ -69,29 +67,6 @@ const bars = [
         <div class="cap">준비 중</div>
       </Card>
     </div>
-      </div>
-
-      <aside class="aside">
-        <Card title="바로가기">
-          <a
-            class="golink primary"
-            href="https://total.hscity.go.kr/web2/dashboard-main/shares/415bf387db01b77eb8d2f6ae700b8934"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Icon name="landmark" :size="22" />
-            <span class="gt">원본 다모아 플랫폼<small>total.hscity.go.kr · 새 탭</small></span>
-            <span class="arr">↗</span>
-          </a>
-          <a class="golink" href="https://www.hscity.go.kr/" target="_blank" rel="noopener noreferrer">
-            <Icon name="house" :size="20" />
-            <span class="gt">화성특례시청 누리집<small>www.hscity.go.kr</small></span>
-            <span class="arr">↗</span>
-          </a>
-          <p class="cap">이 대시보드는 다모아플랫폼 공개 표시값을 안전하게 재현한 복제본입니다.</p>
-        </Card>
-      </aside>
-    </div>
   </MenuLayout>
 </template>
 
@@ -109,21 +84,5 @@ const bars = [
 .brk .t { flex: 1; min-width: 0; }
 .brk .n { margin-left: auto; text-align: right; font-weight: 700; color: var(--orange-hot); }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.layout { display: grid; grid-template-columns: 1fr 300px; gap: 14px; align-items: start; }
-.main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.aside { position: sticky; top: 12px; }
-.golink {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 14px; margin-bottom: 10px;
-  border: 1px solid var(--rule); border-radius: 10px;
-  color: var(--ink); text-decoration: none;
-  background: rgba(255,255,255,.02); transition: background .15s, border-color .15s;
-}
-.golink:hover { background: rgba(255,255,255,.07); border-color: #6c86a8; }
-.golink.primary { border-color: var(--orange-hot); background: rgba(255,138,46,.1); }
-.golink .gt { display: flex; flex-direction: column; line-height: 1.25; font-weight: 700; }
-.golink .gt small { font-weight: 400; color: var(--muted); font-size: 11px; margin-top: 2px; }
-.golink .arr { margin-left: auto; color: var(--muted); font-size: 1.1rem; }
 @media (max-width: 560px) { .two { grid-template-columns: 1fr; } }
-@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .aside { position: static; } }
 </style>

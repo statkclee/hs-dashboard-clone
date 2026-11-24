@@ -19,6 +19,16 @@ const emit = defineEmits(['select'])
         <Icon :name="m.icon" :size="17" />
         <span>{{ m.name }}</span>
       </a>
+      <a
+        class="item ext"
+        href="https://total.hscity.go.kr/web2/dashboard-main/shares/415bf387db01b77eb8d2f6ae700b8934"
+        target="_blank" rel="noopener noreferrer"
+        title="원본 다모아 플랫폼 (새 탭)"
+      >
+        <img :src="`${base}favicon.png`" class="favi" alt="화성시" />
+        <span>원본 다모아 바로가기</span>
+        <span class="arr" aria-hidden="true">↗</span>
+      </a>
     </nav>
   </header>
 </template>
@@ -44,4 +54,9 @@ const emit = defineEmits(['select'])
 .item:hover { color: #fff; background: rgba(255,255,255,.05); }
 .item.active { color: #fff; border-bottom-color: var(--blue); }
 .item .ico { opacity: .95; }
+.item.ext { margin-left: auto; border: 1px solid rgba(255,255,255,.18); background: rgba(255,138,46,.14); }
+.item.ext:hover { background: rgba(255,138,46,.26); border-color: var(--orange-hot); }
+.favi { width: 18px; height: 18px; border-radius: 3px; display: block; }
+.item.ext .arr { opacity: .8; font-size: .9rem; }
+@media (max-width: 900px) { .item.ext { margin-left: 0; } }
 </style>
