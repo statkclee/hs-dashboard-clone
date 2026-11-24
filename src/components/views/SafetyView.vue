@@ -47,21 +47,47 @@ async function buildMap() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 18, attribution: '&copy; OpenStreetMap',
   }).addTo(map)
+  // 읍면동 → 대기등급(색) 매핑 — 측정소명과 읍면동명 매칭(동탄 측정소는 동탄N동 전부)
+  const byDong = {}
+  for (const s of air.value.stations || []) {
+    const [, color] = airGrade('pm10', s.pm10)
+    byDong[s.station] = { color, pm10: s.pm10, grade: airGrade('pm10', s.pm10)[0] }
+  }
+  const matchDong = (dong) => {
+    for (const st in byDong) {
+      if (dong.includes(st) || st.includes(dong)) return byDong[st]
+      if (st.startsWith('동탄') && dong.startsWith('동탄')) return byDong[st]
+      if (st.startsWith('송산') && dong.startsWith('송산')) return byDong[st]
+    }
+    return null
+  }
   if (geo.value) {
     const layer = L.geoJSON(geo.value, {
-      style: { fillColor: '#2c3e50', fillOpacity: 0.25, color: '#ffffff', weight: 1 },
+      style: (f) => {
+        const m = matchDong(f.properties.dong)
+        return { fillColor: m ? m.color : '#33465c', fillOpacity: m ? 0.72 : 0.35, color: '#ffffff', weight: 1 }
+      },
+      onEachFeature: (f, lyr) => {
+        const m = matchDong(f.properties.dong)
+        lyr.bindTooltip(m ? `${f.properties.dong} · PM10 ${m.pm10} (${m.grade})` : `${f.properties.dong} · 측정소 없음`,
+          { sticky: true })
+      },
     }).addTo(map)
     try { map.fitBounds(layer.getBounds()) } catch (e) { /* ignore */ }
   }
-  const coords = stations.value?.status === 'ok' ? stations.value.stations || [] : []
-  for (const s of air.value.stations || []) {
-    const c = coords.find((x) => x.station && s.station && (x.station.includes(s.station) || s.station.includes(x.station)))
-    if (!c) continue
-    const color = airGrade('pm10', s.pm10)[1]
-    L.circleMarker([c.lat, c.lng], { radius: 10, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.9 })
-      .bindTooltip(`${s.station} · PM10 ${s.pm10 ?? '—'}`)
-      .addTo(map)
+  // 범례(대시보드식)
+  const legend = L.control({ position: 'bottomright' })
+  legend.onAdd = () => {
+    const div = L.DomUtil.create('div', 'aq-legend')
+    div.innerHTML =
+      '<b>미세먼지(PM10)</b>' +
+      '<span><i style="background:#1c75d6"></i>좋음</span>' +
+      '<span><i style="background:#2fa84f"></i>보통</span>' +
+      '<span><i style="background:#f5a623"></i>나쁨</span>' +
+      '<span><i style="background:#e53935"></i>매우나쁨</span>'
+    return div
   }
+  legend.addTo(map)
   setTimeout(() => map && map.invalidateSize(), 0)
 }
 
@@ -147,5 +173,10 @@ onBeforeUnmount(destroyMap)
 .muted { color: var(--muted); margin: 0; }
 .cap { color: var(--muted); font-size: .82rem; margin: 0 0 8px; }
 :deep(.leaflet-container) { background: #0c1b2e; font-family: inherit; }
+:deep(.aq-legend) { background: rgba(14,34,56,.92); color: #e8eef5; padding: 8px 10px; border-radius: 6px;
+  font-size: 11px; line-height: 1.6; border: 1px solid rgba(255,255,255,.15); }
+:deep(.aq-legend b) { display: block; margin-bottom: 4px; }
+:deep(.aq-legend span) { display: inline-flex; align-items: center; margin-right: 8px; }
+:deep(.aq-legend i) { width: 11px; height: 11px; border-radius: 2px; display: inline-block; margin-right: 4px; }
 @media (max-width: 700px) { .lmap { height: 340px; } }
 </style>
