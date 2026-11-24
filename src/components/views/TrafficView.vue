@@ -49,6 +49,7 @@ function renderMap() {
   })
   if (pts.length) map.fitBounds(pts, { padding: [20, 20] })
   else map.setView([37.2, 126.9], 11)
+  setTimeout(() => map && map.invalidateSize(), 0)
 }
 
 function destroyH2() { if (h2Map) { h2Map.remove(); h2Map = null } }
@@ -72,6 +73,7 @@ function renderH2() {
       .bindTooltip(s.nm || '수소충전소').addTo(h2Map)
   })
   if (pts.length) h2Map.fitBounds(pts, { padding: [30, 30], maxZoom: 13 })
+  setTimeout(() => h2Map && h2Map.invalidateSize(), 0)
 }
 
 function renderPark() {
@@ -86,6 +88,7 @@ function renderPark() {
   })
   if (pts.length) parkMap.fitBounds(pts, { padding: [20, 20] })
   else parkMap.setView([37.2, 126.9], 11)
+  setTimeout(() => parkMap && parkMap.invalidateSize(), 0)
 }
 
 async function buildFor(k) {
@@ -116,40 +119,48 @@ onBeforeUnmount(() => { destroyMap(); destroyH2(); destroyPark() })
         <div class="tiles">
           <StatTile label="전기차 충전소" :value="fmt(total) + '곳'" icon="car" accent />
         </div>
-        <Card title="전기차 충전소 지도 — 화성시">
-          
+        <div class="cols">
+          <Card title="전기차 충전소 지도 — 화성시">
             <div v-if="ev && !chargers.length" class="muted">서버 수집 대기</div>
             <div ref="mapEl" class="evmap" v-show="chargers.length"></div>
-          
-        </Card>
-        <Card title="충전소 목록">
-          
-            <DataTable :cols="['충전소', '주소', '충전기수']" :rows="evRows" />
-          
-        </Card>
+          </Card>
+          <Card title="충전소 목록">
+            <div class="list-scroll">
+              <DataTable :cols="['충전소', '주소', '충전기수']" :rows="evRows" />
+            </div>
+          </Card>
+        </div>
       </div>
       <div class="view" v-else-if="active === 'park'">
         <div class="tiles">
           <StatTile label="공영주차장" :value="fmt(parkData.length) + '곳'" icon="car" accent />
           <StatTile label="지도 표시" :value="fmt(parkPlot.length) + '곳'" icon="car" />
         </div>
-        <Card title="주차장 지도 — 화성시">
-          <div ref="parkEl" class="evmap"></div>
-        </Card>
-        <Card title="주차장 목록">
-          <DataTable :cols="['주차장', '주소', '행정동']" :rows="parkRows" />
-        </Card>
+        <div class="cols">
+          <Card title="주차장 지도 — 화성시">
+            <div ref="parkEl" class="evmap"></div>
+          </Card>
+          <Card title="주차장 목록">
+            <div class="list-scroll">
+              <DataTable :cols="['주차장', '주소', '행정동']" :rows="parkRows" />
+            </div>
+          </Card>
+        </div>
       </div>
       <div class="view" v-else>
         <div class="tiles">
           <StatTile label="수소차 충전소" :value="fmt(h2Data.length) + '곳'" icon="car" accent />
         </div>
-        <Card title="수소차 충전소 지도 — 화성시">
-          <div ref="h2El" class="evmap"></div>
-        </Card>
-        <Card title="충전소 목록">
-          <DataTable :cols="['충전소', '주소', '행정동']" :rows="h2Rows" />
-        </Card>
+        <div class="cols">
+          <Card title="수소차 충전소 지도 — 화성시">
+            <div ref="h2El" class="evmap"></div>
+          </Card>
+          <Card title="충전소 목록">
+            <div class="list-scroll">
+              <DataTable :cols="['충전소', '주소', '행정동']" :rows="h2Rows" />
+            </div>
+          </Card>
+        </div>
       </div>
   </MenuLayout>
 </template>
@@ -157,8 +168,11 @@ onBeforeUnmount(() => { destroyMap(); destroyH2(); destroyPark() })
 <style scoped>
 .view { display: flex; flex-direction: column; gap: 14px; }
 .tiles { display: flex; gap: 14px; flex-wrap: wrap; }
+.cols { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; align-items: start; }
+.list-scroll { max-height: 520px; overflow-y: auto; }
 .evmap { height: 520px; width: 100%; border-radius: 8px; overflow: hidden; }
 .muted { color: #8fa3bd; padding: 1rem .5rem; font-size: .9rem; }
 :deep(.leaflet-container) { background: #0c1b2e; font-family: inherit; }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
 @media (max-width: 720px) { .evmap { height: 360px; } }
 </style>

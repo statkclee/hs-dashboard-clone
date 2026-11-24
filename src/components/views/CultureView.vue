@@ -93,6 +93,7 @@ async function buildMap() {
   if (!map.getZoom()) map.setView([37.2, 126.85], 10)
   drawMarkers(true)
   map.invalidateSize()
+  setTimeout(() => map && map.invalidateSize(), 0)
 }
 
 watch(activeCats, () => drawMarkers(true))
@@ -135,26 +136,27 @@ onBeforeUnmount(destroyMap)
         <StatTile label="관광지" :value="`${tour.total}곳`" icon="landmark" accent />
         <StatTile v-for="c in CATS" :key="c" :label="c" :value="`${tour.counts[c] ?? 0}곳`" icon="pin" />
       </div>
-      <Card title="관광지도 — 화성시">
-        <div class="filters">
-          <button type="button" class="fbtn" :class="{ on: activeCats.size === CATS.length }" @click="toggleCat('all')">전체</button>
-          <button
-            v-for="c in CATS"
-            :key="c"
-            type="button"
-            class="fbtn"
-            :class="{ on: activeCats.has(c) }"
-            @click="toggleCat(c)"
-          >
-            <span class="sw" :style="{ background: COLORS[c] }"></span>{{ c }}
-          </button>
-        </div>
-        <div class="mapwrap">
+      <div class="cols">
+        <Card title="관광지도 — 화성시">
+          <div class="filters">
+            <button type="button" class="fbtn" :class="{ on: activeCats.size === CATS.length }" @click="toggleCat('all')">전체</button>
+            <button
+              v-for="c in CATS"
+              :key="c"
+              type="button"
+              class="fbtn"
+              :class="{ on: activeCats.has(c) }"
+              @click="toggleCat(c)"
+            >
+              <span class="sw" :style="{ background: COLORS[c] }"></span>{{ c }}
+            </button>
+          </div>
           <div ref="mapEl" class="tmap"></div>
-          <div class="detail">
-            <div class="dh">상세</div>
+        </Card>
+        <div class="rightcol">
+          <Card title="상세">
             <template v-if="selected">
-              <dl>
+              <dl class="detail">
                 <dt>구분</dt>
                 <dd><span class="sw" :style="{ background: COLORS[selected.cat] }"></span>{{ selected.cat }}</dd>
                 <dt>관광지명</dt>
@@ -166,12 +168,14 @@ onBeforeUnmount(destroyMap)
               </dl>
             </template>
             <div v-else class="hint">지도의 마커를 선택하면 상세 정보가 표시됩니다.</div>
-          </div>
+          </Card>
+          <Card title="관광지 목록">
+            <div class="list-scroll">
+              <DataTable :cols="['관광지명', '구분', '주소', '문의전화']" :rows="tableRows" />
+            </div>
+          </Card>
         </div>
-      </Card>
-      <Card title="관광지 목록">
-        <DataTable :cols="['관광지명', '구분', '주소', '문의전화']" :rows="tableRows" />
-      </Card>
+      </div>
     </template>
   </MenuLayout>
 </template>
@@ -184,15 +188,17 @@ onBeforeUnmount(destroyMap)
 .fbtn.on { opacity: 1; color: #fff; border-color: #6c86a8; background: rgba(255,255,255,.06); }
 .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; }
 .fbtn .sw { margin-right: 0; }
-.mapwrap { display: grid; grid-template-columns: 1fr 260px; gap: 12px; }
-.detail { border: 1px solid #2a3a50; border-radius: 8px; padding: 12px; }
-.dh { font-weight: 800; margin-bottom: 8px; color: #fff; }
+.cols { display: grid; grid-template-columns: 1.55fr 1fr; gap: 14px; align-items: start; }
+.rightcol { display: flex; flex-direction: column; gap: 14px; }
+.list-scroll { max-height: 360px; overflow-y: auto; }
+.detail { margin: 0; }
 .detail dt { font-size: .8rem; color: #8fa3bd; margin-top: 8px; }
 .detail dd { margin: 2px 0 0; color: #fff; word-break: keep-all; }
 .hint { color: #8fa3bd; font-size: .85rem; }
 .tmap :deep(.leaflet-container),
 :deep(.leaflet-container) { background: #0c1b2e; font-family: inherit; }
 .month-title { font-size: 1.3rem; font-weight: 800; text-align: center; margin-bottom: 12px; color: #fff; }
-@media (max-width: 800px) { .mapwrap { grid-template-columns: 1fr; } .tiles { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px) { .tmap { height: 360px; } }
 </style>

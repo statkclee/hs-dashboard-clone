@@ -268,18 +268,22 @@ onBeforeUnmount(() => { destroyMap(); destroySlopeMap(); destroyLandMap() })
           <StatTile label="붕괴위험지역 지정" :value="ssOk ? steep.n + '곳' : '—'" icon="shield" />
           <StatTile label="지정 D등급(위험)" :value="ssOk ? ssGrades.D + '곳' : '—'" icon="shield" />
         </div>
-        <Card title="급경사지 지도 — 화성시 (관리대상 전수)">
-          <div v-if="sfOk" ref="slopeMapEl" class="lmap"></div>
-          <p v-else class="muted">수집 대기</p>
-          <p class="cap">{{ steepFull.n }}곳 · 출처: 급경사지 전수(다모아 공개 표시값)</p>
-        </Card>
-        <Card title="붕괴위험지역 지정 현황 — 화성시 (safetydata)">
-          <p v-if="!ssOk" class="muted">수집 대기</p>
-          <template v-else>
-            <p class="cap">전수 {{ sfOk ? steepFull.n : '—' }}곳 중 공식 '붕괴위험지역' 지정 {{ steep.n }}곳 · 재해위험도 등급(A~E)</p>
-            <DataTable :cols="['지구명', '등급', '평가점수', '지정일', '지정사유']" :rows="ssRows" />
-          </template>
-        </Card>
+        <div class="cols">
+          <Card title="급경사지 지도 — 화성시 (관리대상 전수)">
+            <div v-if="sfOk" ref="slopeMapEl" class="lmap"></div>
+            <p v-else class="muted">수집 대기</p>
+            <p class="cap">{{ steepFull.n }}곳 · 출처: 급경사지 전수(다모아 공개 표시값)</p>
+          </Card>
+          <Card title="붕괴위험지역 지정 현황 — 화성시 (safetydata)">
+            <p v-if="!ssOk" class="muted">수집 대기</p>
+            <template v-else>
+              <p class="cap">전수 {{ sfOk ? steepFull.n : '—' }}곳 중 공식 '붕괴위험지역' 지정 {{ steep.n }}곳 · 재해위험도 등급(A~E)</p>
+              <div class="list-scroll">
+                <DataTable :cols="['지구명', '등급', '평가점수', '지정일', '지정사유']" :rows="ssRows" />
+              </div>
+            </template>
+          </Card>
+        </div>
       </template>
 
       <!-- 교통상황 / 자전거 -->
