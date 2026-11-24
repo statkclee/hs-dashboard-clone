@@ -18,11 +18,22 @@ const active = ref('air')
 const air = ref({}), landslide = ref({}), stations = ref({}), geo = ref(null)
 const steep = ref({})
 const steepFull = ref({}) // 다모아 전수 좌표(109곳)
+const landFull = ref({})  // 다모아 산사태 취약지역(40곳)
 const mapEl = ref(null)
 const slopeMapEl = ref(null)
+const landMapEl = ref(null)
 let map = null
 let slopeMap = null
+let landMap = null
 const sfOk = computed(() => steepFull.value?.status === 'ok')
+const lfOk = computed(() => landFull.value?.status === 'ok')
+const lfRows = computed(() =>
+  lfOk.value ? (landFull.value.items || []).map((r) => [r.grade, r.dong, r.addr]) : [])
+const lfGrades = computed(() => {
+  const g = {}
+  if (lfOk.value) for (const r of landFull.value.items) g[r.grade] = (g[r.grade] || 0) + 1
+  return g
+})
 
 const airOk = computed(() => air.value?.status === 'ok')
 const lsOk = computed(() => landslide.value?.status === 'ok')
@@ -44,6 +55,43 @@ function destroyMap() {
 }
 function destroySlopeMap() {
   if (slopeMap) { slopeMap.remove(); slopeMap = null }
+}
+function destroyLandMap() {
+  if (landMap) { landMap.remove(); landMap = null }
+}
+async function buildLandMap() {
+  destroyLandMap()
+  await nextTick()
+  if (!landMapEl.value || !lfOk.value) return
+  landMap = L.map(landMapEl.value, { center: [37.17, 126.92], zoom: 11, scrollWheelZoom: false })
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(landMap)
+  if (geo.value) {
+    L.geoJSON(geo.value, { style: { fillColor: '#2c3e50', fillOpacity: 0.12, color: '#ffffff', weight: 1 } }).addTo(landMap)
+  }
+  // 산사태위험등급 1(최고위험)~3 색차별
+  const GCOL = { '1등급': '#e53935', '2등급': '#f5a623', '3등급': '#f5d84a' }
+  const pts = []
+  for (const s of landFull.value.items || []) {
+    if (!s.lat || !s.lng) continue
+    pts.push([s.lat, s.lng])
+    const color = GCOL[s.grade] || '#7a8aa0'
+    const r = s.grade === '1등급' ? 9 : 6.5
+    L.circleMarker([s.lat, s.lng], { radius: r, color: '#fff', weight: 2, fillColor: color, fillOpacity: 0.9 })
+      .bindTooltip(`${s.grade} · ${s.dong} · ${s.addr}`)
+      .addTo(landMap)
+  }
+  if (pts.length) { try { landMap.fitBounds(pts, { padding: [20, 20] }) } catch (e) { /* ignore */ } }
+  const lg = L.control({ position: 'bottomright' })
+  lg.onAdd = () => {
+    const d = L.DomUtil.create('div', 'aq-legend')
+    d.innerHTML = '<b>산사태위험등급</b>' +
+      '<span><i style="background:#e53935"></i>1등급(최고위험)</span>' +
+      '<span><i style="background:#f5a623"></i>2등급</span>' +
+      '<span><i style="background:#f5d84a"></i>3등급</span>'
+    return d
+  }
+  lg.addTo(landMap)
+  setTimeout(() => landMap && landMap.invalidateSize(), 0)
 }
 async function buildSlopeMap() {
   destroySlopeMap()
@@ -150,22 +198,25 @@ async function buildMap() {
 }
 
 onMounted(async () => {
-  const [a, l, st, g, ss, sf] = await Promise.all([
+  const [a, l, st, g, ss, sf, lf] = await Promise.all([
     loadJSON('air'), loadJSON('landslide'), loadJSON('stations'), loadGeo('hwaseong_emd.geojson'),
-    loadJSON('steepslope'), loadGeo('급경사지-전수.json'),
+    loadJSON('steepslope'), loadGeo('급경사지-전수.json'), loadGeo('산사태취약지역.json'),
   ])
-  air.value = a; landslide.value = l; stations.value = st; geo.value = g; steep.value = ss; steepFull.value = sf
+  air.value = a; landslide.value = l; stations.value = st; geo.value = g
+  steep.value = ss; steepFull.value = sf; landFull.value = lf
   if (active.value === 'air') await buildMap()
   else if (active.value === 'slope') await buildSlopeMap()
+  else if (active.value === 'land') await buildLandMap()
 })
 
 watch(active, async (k) => {
-  destroyMap(); destroySlopeMap()
+  destroyMap(); destroySlopeMap(); destroyLandMap()
   if (k === 'air') await buildMap()
   else if (k === 'slope') await buildSlopeMap()
+  else if (k === 'land') await buildLandMap()
 })
 
-onBeforeUnmount(() => { destroyMap(); destroySlopeMap() })
+onBeforeUnmount(() => { destroyMap(); destroySlopeMap(); destroyLandMap() })
 </script>
 
 <template>
@@ -191,9 +242,20 @@ onBeforeUnmount(() => { destroyMap(); destroySlopeMap() })
       <!-- 산사태 -->
       <template v-else-if="active === 'land'">
         <div class="tiles">
-          <StatTile label="산사태우려지역" :value="lsOk ? landslide.n + '곳' : '— (수집 대기)'" icon="pin" accent />
+          <StatTile label="산사태 취약지역" :value="lfOk ? landFull.n + '곳' : '—'" icon="pin" accent />
+          <StatTile label="1등급(최고위험)" :value="lfOk ? (lfGrades['1등급'] || 0) + '곳' : '—'" icon="pin" />
+          <StatTile label="산사태우려지역(지정)" :value="lsOk ? landslide.n + '곳' : '—'" icon="pin" />
         </div>
-        <Card title="산사태우려지역 — 화성시">
+        <Card title="산사태 취약지역 지도 — 화성시">
+          <div v-if="lfOk" ref="landMapEl" class="lmap"></div>
+          <p v-else class="muted">수집 대기</p>
+          <p class="cap">{{ lfOk ? landFull.n : '—' }}곳 · 산사태위험등급 1~3 · 출처: 산사태 취약지역(다모아 공개 표시값)</p>
+        </Card>
+        <Card title="산사태 취약지역 목록">
+          <DataTable v-if="lfOk" :cols="['산사태등급', '읍면동', '주소']" :rows="lfRows" />
+          <p v-else class="muted">수집 대기</p>
+        </Card>
+        <Card title="산사태우려지역 — 화성시 (safetydata)">
           <p v-if="!lsOk" class="muted">수집 대기</p>
           <p v-else-if="!landslide.n" class="muted">화성시 산사태우려지역 지정 없음.</p>
           <DataTable v-else :cols="['읍면동법정코드', '지명', '예상피해']" :rows="lsRows" />
