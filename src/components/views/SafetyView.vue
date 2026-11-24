@@ -17,8 +17,12 @@ const items = [
 const active = ref('air')
 const air = ref({}), landslide = ref({}), stations = ref({}), geo = ref(null)
 const steep = ref({})
+const steepFull = ref({}) // 다모아 전수 좌표(109곳)
 const mapEl = ref(null)
+const slopeMapEl = ref(null)
 let map = null
+let slopeMap = null
+const sfOk = computed(() => steepFull.value?.status === 'ok')
 
 const airOk = computed(() => air.value?.status === 'ok')
 const lsOk = computed(() => landslide.value?.status === 'ok')
@@ -37,6 +41,29 @@ const lsRows = computed(() =>
 
 function destroyMap() {
   if (map) { map.remove(); map = null }
+}
+function destroySlopeMap() {
+  if (slopeMap) { slopeMap.remove(); slopeMap = null }
+}
+async function buildSlopeMap() {
+  destroySlopeMap()
+  await nextTick()
+  if (!slopeMapEl.value || !sfOk.value) return
+  slopeMap = L.map(slopeMapEl.value, { center: [37.17, 126.92], zoom: 11, scrollWheelZoom: false })
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(slopeMap)
+  if (geo.value) {
+    L.geoJSON(geo.value, { style: { fillColor: '#2c3e50', fillOpacity: 0.12, color: '#ffffff', weight: 1 } }).addTo(slopeMap)
+  }
+  const pts = []
+  for (const s of steepFull.value.items || []) {
+    if (!s.lat || !s.lng) continue
+    pts.push([s.lat, s.lng])
+    L.circleMarker([s.lat, s.lng], { radius: 5, color: '#fff', weight: 1, fillColor: '#ec6708', fillOpacity: 0.85 })
+      .bindTooltip(`${s.nm} · ${s.dong}`)
+      .addTo(slopeMap)
+  }
+  if (pts.length) { try { slopeMap.fitBounds(pts, { padding: [20, 20] }) } catch (e) { /* ignore */ } }
+  setTimeout(() => slopeMap && slopeMap.invalidateSize(), 0)
 }
 
 async function buildMap() {
@@ -92,20 +119,22 @@ async function buildMap() {
 }
 
 onMounted(async () => {
-  const [a, l, st, g, ss] = await Promise.all([
+  const [a, l, st, g, ss, sf] = await Promise.all([
     loadJSON('air'), loadJSON('landslide'), loadJSON('stations'), loadGeo('hwaseong_emd.geojson'),
-    loadJSON('steepslope'),
+    loadJSON('steepslope'), loadGeo('급경사지-전수.json'),
   ])
-  air.value = a; landslide.value = l; stations.value = st; geo.value = g; steep.value = ss
+  air.value = a; landslide.value = l; stations.value = st; geo.value = g; steep.value = ss; steepFull.value = sf
   if (active.value === 'air') await buildMap()
+  else if (active.value === 'slope') await buildSlopeMap()
 })
 
 watch(active, async (k) => {
+  destroyMap(); destroySlopeMap()
   if (k === 'air') await buildMap()
-  else destroyMap()
+  else if (k === 'slope') await buildSlopeMap()
 })
 
-onBeforeUnmount(destroyMap)
+onBeforeUnmount(() => { destroyMap(); destroySlopeMap() })
 </script>
 
 <template>
@@ -143,14 +172,19 @@ onBeforeUnmount(destroyMap)
       <!-- 급경사지 -->
       <template v-else-if="active === 'slope'">
         <div class="tiles">
-          <StatTile label="급경사지 붕괴위험지역" :value="ssOk ? steep.n + '곳' : '— (수집 대기)'" icon="shield" accent />
-          <StatTile label="D등급(위험)" :value="ssOk ? ssGrades.D + '곳' : '—'" icon="shield" />
-          <StatTile label="C등급" :value="ssOk ? ssGrades.C + '곳' : '—'" icon="shield" />
+          <StatTile label="급경사지 관리대상(전수)" :value="sfOk ? steepFull.n + '곳' : '—'" icon="shield" accent />
+          <StatTile label="붕괴위험지역 지정" :value="ssOk ? steep.n + '곳' : '—'" icon="shield" />
+          <StatTile label="지정 D등급(위험)" :value="ssOk ? ssGrades.D + '곳' : '—'" icon="shield" />
         </div>
-        <Card title="급경사지 붕괴위험지역 — 화성시 (safetydata)">
+        <Card title="급경사지 지도 — 화성시 (관리대상 전수)">
+          <div v-if="sfOk" ref="slopeMapEl" class="lmap"></div>
+          <p v-else class="muted">수집 대기</p>
+          <p class="cap">{{ steepFull.n }}곳 · 출처: 급경사지 전수(다모아 공개 표시값)</p>
+        </Card>
+        <Card title="붕괴위험지역 지정 현황 — 화성시 (safetydata)">
           <p v-if="!ssOk" class="muted">수집 대기</p>
           <template v-else>
-            <p class="cap">전국 {{ steep.nationwide }}건 중 화성 {{ steep.n }}곳 · 재해위험도 등급(A~E)</p>
+            <p class="cap">전수 {{ sfOk ? steepFull.n : '—' }}곳 중 공식 '붕괴위험지역' 지정 {{ steep.n }}곳 · 재해위험도 등급(A~E)</p>
             <DataTable :cols="['지구명', '등급', '평가점수', '지정일', '지정사유']" :rows="ssRows" />
           </template>
         </Card>
