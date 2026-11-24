@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 620" font-family="Apple SD Gothic Neo, Pretendard, NanumGothic, sans-serif" font-size="13" fill="#111">
+  <title>다모아 복제 파이프라인 — 대문(홈)에서 익힌 6단계와 재사용 자산</title>
+  <rect x="0" y="0" width="100%" height="100%" fill="#ffffff"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2c67df"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#888"/></marker>
+  </defs>
+
+  <text x="24" y="32" font-weight="700" font-size="17">다모아 복제 파이프라인 — 대문에서 익힌 6단계</text>
+  <text x="24" y="54" font-size="12.5" fill="#555">원칙: <tspan font-weight="700">긁지 말고 관측</tspan>(BIX5는 캔버스 렌더) · <tspan font-weight="700">키는 서버에만</tspan> · 네이버→공개타일 · 캔버스 요소는 SVG로 재현</text>
+
+  <!-- 6 단계 박스 -->
+  <g>
+    <!-- 1 -->
+    <rect x="24" y="78" width="146" height="96" rx="9" fill="#eef3fb" stroke="#2c67df"/>
+    <text x="36" y="100" font-weight="700" fill="#2c67df">① 관측</text>
+    <text x="36" y="120" font-size="11.5" fill="#333">Chrome으로 원본</text>
+    <text x="36" y="136" font-size="11.5" fill="#333">네트워크·DOM·</text>
+    <text x="36" y="152" font-size="11.5" fill="#333">computed style</text>
+    <text x="36" y="168" font-size="11" fill="#888">(캡처·요소 좌표)</text>
+    <!-- 2 -->
+    <rect x="190" y="78" width="146" height="96" rx="9" fill="#eef3fb" stroke="#2c67df"/>
+    <text x="202" y="100" font-weight="700" fill="#2c67df">② 토큰 추출</text>
+    <text x="202" y="120" font-size="11.5" fill="#333">색 rgb→hex</text>
+    <text x="202" y="136" font-size="11.5" fill="#333">폰트(Pretendard)</text>
+    <text x="202" y="152" font-size="11.5" fill="#333">간격·반경</text>
+    <text x="202" y="168" font-size="11" fill="#888">→ styles.css 토큰</text>
+    <!-- 3 -->
+    <rect x="356" y="78" width="146" height="96" rx="9" fill="#eef3fb" stroke="#2c67df"/>
+    <text x="368" y="100" font-weight="700" fill="#2c67df">③ 에셋</text>
+    <text x="368" y="120" font-size="11.5" fill="#333">로고=캡처</text>
+    <text x="368" y="136" font-size="11.5" fill="#333">아이콘=확대·슬라이스</text>
+    <text x="368" y="152" font-size="11.5" fill="#333">캔버스=SVG 재현</text>
+    <text x="368" y="168" font-size="11" fill="#888">(투명 컬러키)</text>
+    <!-- 4 -->
+    <rect x="522" y="78" width="146" height="96" rx="9" fill="#eef3fb" stroke="#2c67df"/>
+    <text x="534" y="100" font-weight="700" fill="#2c67df">④ 레이아웃</text>
+    <text x="534" y="120" font-size="11.5" fill="#333">그리드 구역화</text>
+    <text x="534" y="136" font-size="11.5" fill="#333">위젯 배치</text>
+    <text x="534" y="152" font-size="11.5" fill="#333">동작(플립·시계)</text>
+    <text x="534" y="168" font-size="11" fill="#888">Vue 컴포넌트</text>
+    <!-- 5 -->
+    <rect x="688" y="78" width="146" height="96" rx="9" fill="#eef7f1" stroke="#2f8f5b"/>
+    <text x="700" y="100" font-weight="700" fill="#2f8f5b">⑤ 데이터</text>
+    <text x="700" y="120" font-size="11.5" fill="#333">_collect.py(서버)</text>
+    <text x="700" y="136" font-size="11.5" fill="#333">→ 스냅숏 JSON</text>
+    <text x="700" y="152" font-size="11.5" fill="#333">→ 프론트 fetch</text>
+    <text x="700" y="168" font-size="11" fill="#2f8f5b">키는 서버에만</text>
+    <!-- 6 -->
+    <rect x="854" y="78" width="104" height="96" rx="9" fill="#fff6e9" stroke="#d9a400"/>
+    <text x="866" y="100" font-weight="700" fill="#9a7400">⑥ 비교</text>
+    <text x="866" y="120" font-size="11.5" fill="#333">원본∥복제</text>
+    <text x="866" y="136" font-size="11.5" fill="#333">캡처 대조</text>
+    <text x="866" y="152" font-size="11.5" fill="#333">색·폰트·</text>
+    <text x="866" y="168" font-size="11.5" fill="#333">디테일 튜닝</text>
+  </g>
+  <!-- 진행 화살표 -->
+  <g stroke="#2c67df" stroke-width="2">
+    <line x1="170" y1="126" x2="188" y2="126" marker-end="url(#a)"/>
+    <line x1="336" y1="126" x2="354" y2="126" marker-end="url(#a)"/>
+    <line x1="502" y1="126" x2="520" y2="126" marker-end="url(#a)"/>
+    <line x1="668" y1="126" x2="686" y2="126" marker-end="url(#a)"/>
+    <line x1="834" y1="126" x2="852" y2="126" marker-end="url(#a)"/>
+  </g>
+  <!-- 피드백 루프 ⑥ → ④ -->
+  <path d="M906,174 C906,210 595,210 595,178" fill="none" stroke="#888" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#b)"/>
+  <text x="640" y="206" font-size="11.5" fill="#888">디테일 불일치 → ④로 반복</text>
+
+  <!-- 재사용 자산 레인 -->
+  <rect x="24" y="250" width="934" height="120" rx="10" fill="#f7f9fc" stroke="#cbd6e6"/>
+  <text x="40" y="274" font-weight="700" fill="#2c3e5a">♻ 이미 만든 재사용 자산 (나머지 메뉴에 그대로)</text>
+  <g font-size="12" fill="#333">
+    <text x="40" y="298">· 디자인 토큰: styles.css(#122A44·#ff7818→#ffc1aa·#2c67df·Pretendard·별자리 배경)</text>
+    <text x="40" y="320">· 컴포넌트: Card · DataTable · StatTile(값상자) · StatureCards(순위·플립) · TideCard(알약) · EventsList · AirFace(SVG 등급) · Icon · PopMap(choropleth)</text>
+    <text x="40" y="342">· 데이터 레이어: lib/data.js(loadJSON·loadCSV·loadGeo·airGrade) · public/data 심링크 · _collect.py 수집기</text>
+    <text x="40" y="362">· 에셋: 로고 · 이모지(해·지구본·물방울·바람·우산·아기) · 행정동 GeoJSON</text>
+  </g>
+
+  <!-- 메뉴별 적용 -->
+  <text x="24" y="406" font-weight="700" font-size="14">나머지 7개 메뉴 — 같은 6단계를 메뉴마다 반복</text>
+  <g font-size="12">
+    <!-- 헤더 -->
+    <g font-weight="700" fill="#555"><text x="34" y="432">메뉴</text><text x="210" y="432">데이터 상태</text><text x="430" y="432">주 재사용</text><text x="700" y="432">우선순위</text></g>
+    <line x1="24" y1="440" x2="958" y2="440" stroke="#ddd"/>
+    <g fill="#333">
+      <text x="34" y="462">도시현황</text><text x="210" y="462">인구 수집 완료</text><text x="430" y="462">StatTile·DataTable·PopMap</text><text x="700" y="462" fill="#2f8f5b" font-weight="700">높음(바로)</text>
+      <text x="34" y="484">재난/안전</text><text x="210" y="484">대기·산사태 완료</text><text x="430" y="484">StatTile·AirFace·DataTable</text><text x="700" y="484" fill="#2f8f5b" font-weight="700">높음(바로)</text>
+      <text x="34" y="506">교통</text><text x="210" y="506">충전소 완료</text><text x="430" y="506">PopMap·DataTable</text><text x="700" y="506" fill="#2f8f5b" font-weight="700">높음(바로)</text>
+      <text x="34" y="528">사업관리·행정현황</text><text x="210" y="528">CSV 완료</text><text x="430" y="528">StatTile·StatureCards·DataTable</text><text x="700" y="528" fill="#2f8f5b" font-weight="700">높음(바로)</text>
+      <text x="34" y="550">문화/관광</text><text x="210" y="550">행사·물때·교류 완료</text><text x="430" y="550">EventsList·TideCard·DataTable</text><text x="700" y="550" fill="#d9a400" font-weight="700">중(관광 보강)</text>
+      <text x="34" y="572">바로이웃 통합돌봄</text><text x="210" y="572">합성(개인정보)</text><text x="430" y="572">StatTile·DataTable</text><text x="700" y="572" fill="#d9a400" font-weight="700">중(합성 명시)</text>
+      <text x="34" y="594">+ API 활성화분</text><text x="210" y="594">주차장·복지·철도역(대기)</text><text x="430" y="594">_collect.py 연결</text><text x="700" y="594" fill="#888">활성화 후</text>
+    </g>
+  </g>
+</svg>

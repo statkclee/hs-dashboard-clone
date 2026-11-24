@@ -112,3 +112,8 @@ source ~/.venvs/hs-dashboard-clone/bin/activate && python _collect.py
 npm install && npm run dev     # http://127.0.0.1:5173
 npm run build                  # 정적 산출물 dist/ (배포용)
 ```
+
+## 7. 복제 전략 문서화 (2026-11-24)
+
+- [x] **대문 경험 정리 + 나머지 복제 전략** — `복제-전략.md` · `images/clone-pipeline.svg`(6단계 파이프라인·재사용 자산·메뉴별 로드맵)
+- [ ] 전략대로 데이터 완료 5개 메뉴 ⑥단계(원본 디자인 정밀 일치) 튜닝
