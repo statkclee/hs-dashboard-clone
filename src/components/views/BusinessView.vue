@@ -7,6 +7,7 @@ import DataTable from '../DataTable.vue'
 import StatTile from '../StatTile.vue'
 import DonutChart from '../DonutChart.vue'
 
+const base = import.meta.env.BASE_URL || './'
 const sub = ref('pledge')
 const items = [
   { label: '공약사업', key: 'pledge' },
@@ -85,8 +86,11 @@ const catRows = computed(() => cat.value.map((r) => catCols.value.map((c) => r[c
       </Card>
     </template>
 
-    <Card v-else title="중장기발전계획">
-      <div class="muted">준비 중</div>
+    <Card v-else title="중장기발전계획 — 화성시 발전구상도">
+      <div class="planmap">
+        <img :src="`${base}assets/중장기발전계획.png`" alt="화성시 중장기발전계획 구상도" />
+      </div>
+      <p class="cap">마리나항·국제테마파크·GTX-A·고속도로·철도 등 주요 발전사업. 출처: 다모아 공개 표시값</p>
     </Card>
   </MenuLayout>
 </template>
@@ -110,6 +114,9 @@ const catRows = computed(() => cat.value.map((r) => catCols.value.map((c) => r[c
 .fdone { color: var(--muted); font-size: .9rem; }
 .fdone b { color: #fff; font-size: 1.1rem; }
 .muted { color: var(--muted); padding: 24px 0; text-align: center; }
+.planmap { width: 100%; overflow: hidden; border-radius: 8px; background: #0c1b2e; }
+.planmap img { width: 100%; height: auto; display: block; }
+.cap { color: var(--muted); font-size: .8rem; margin-top: 8px; }
 @media (max-width: 900px) {
   .top { grid-template-columns: 1fr; }
 }
