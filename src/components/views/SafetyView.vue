@@ -54,15 +54,46 @@ async function buildSlopeMap() {
   if (geo.value) {
     L.geoJSON(geo.value, { style: { fillColor: '#2c3e50', fillOpacity: 0.12, color: '#ffffff', weight: 1 } }).addTo(slopeMap)
   }
+  // 재해위험도 등급색(원본은 균일 마커 — 클론은 지정 붕괴위험지역을 등급별로 차별화)
+  const GCOL = { E: '#b71c1c', D: '#e53935', C: '#f5a623', B: '#f5d84a', A: '#2fa84f' }
+  const norm = (s) => String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, '')
+  const desig = {} // 정규화 지구명 → 최고위험 등급
+  if (ssOk.value) {
+    const rank = { E: 5, D: 4, C: 3, B: 2, A: 1 }
+    for (const r of steep.value.items || []) {
+      const k = norm(r['지구명']); const g = r['등급']
+      if (!desig[k] || (rank[g] || 0) > (rank[desig[k]] || 0)) desig[k] = g
+    }
+  }
+  const matchGrade = (nm) => {
+    const n = norm(nm)
+    for (const k in desig) { if (n.includes(k) || k.includes(n)) return desig[k] }
+    return null
+  }
   const pts = []
   for (const s of steepFull.value.items || []) {
     if (!s.lat || !s.lng) continue
     pts.push([s.lat, s.lng])
-    L.circleMarker([s.lat, s.lng], { radius: 5, color: '#fff', weight: 1, fillColor: '#ec6708', fillOpacity: 0.85 })
-      .bindTooltip(`${s.nm} · ${s.dong}`)
-      .addTo(slopeMap)
+    const g = matchGrade(s.nm)
+    const color = g ? GCOL[g] : '#7a8aa0'
+    const r = g ? 8 : 4.5
+    L.circleMarker([s.lat, s.lng], {
+      radius: r, color: '#fff', weight: g ? 2 : 1, fillColor: color, fillOpacity: g ? 0.95 : 0.7,
+    }).bindTooltip(g ? `${s.nm} · ${s.dong} · 붕괴위험 ${g}등급` : `${s.nm} · ${s.dong} · 관리대상`).addTo(slopeMap)
   }
   if (pts.length) { try { slopeMap.fitBounds(pts, { padding: [20, 20] }) } catch (e) { /* ignore */ } }
+  // 등급 범례
+  const lg = L.control({ position: 'bottomright' })
+  lg.onAdd = () => {
+    const d = L.DomUtil.create('div', 'aq-legend')
+    d.innerHTML = '<b>붕괴위험 등급</b>' +
+      '<span><i style="background:#e53935"></i>D(위험)</span>' +
+      '<span><i style="background:#f5a623"></i>C</span>' +
+      '<span><i style="background:#2fa84f"></i>A</span>' +
+      '<span><i style="background:#7a8aa0"></i>관리대상(미지정)</span>'
+    return d
+  }
+  lg.addTo(slopeMap)
   setTimeout(() => slopeMap && slopeMap.invalidateSize(), 0)
 }
 
