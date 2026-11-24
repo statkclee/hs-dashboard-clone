@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick, onBeforeUnmount } from 'vue'
+import L from 'leaflet'
 import MenuLayout from '../MenuLayout.vue'
 import Card from '../Card.vue'
 import Icon from '../Icon.vue'
 import DataTable from '../DataTable.vue'
 import StatTile from '../StatTile.vue'
-import { loadCSV } from '../../lib/data.js'
+import DonutChart from '../DonutChart.vue'
+import { loadCSV, loadJSON, loadGeo, fmt } from '../../lib/data.js'
 
 const active = ref('stature')
 const items = [
@@ -33,10 +35,57 @@ const SKIP = ['지방자치경쟁력지수', '재정자립도', '개발가능면
 const norm = (s) => String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, '')
 
 const awards = ref([])
+
+// 주민참여예산
+const budget = ref(null)
+const geo = ref(null)
+const mapEl = ref(null)
+let map = null
+let layer = null
+const STOPS = ['#e8f0ff', '#a9c7ff', '#5f9bff', '#2f6fe0', '#1b4fae']
+const colorOf = (n) => (n <= 0 ? STOPS[0] : STOPS[Math.min(STOPS.length - 1, Math.ceil(n * (STOPS.length - 1) / 6))])
+const bSum = computed(() => budget.value?.summary || {})
+const regionCount = computed(() => Object.fromEntries(budget.value?.region || []))
+const budgetCols = ['지역', '사업명', '담당부서', '예산액(천원)', '집행액(천원)', '상태']
+const budgetRows = computed(() =>
+  (budget.value?.items || []).map((r) => [r.reg, r.nm, r.dept, fmt(r.bud), fmt(r.exe), r.done]))
+
+function destroyMap() {
+  if (map) { map.remove(); map = null; layer = null }
+}
+function renderMap() {
+  if (!mapEl.value || !geo.value || !budget.value) return
+  destroyMap()
+  map = L.map(mapEl.value, { zoomControl: true, scrollWheelZoom: true }).setView([37.17, 126.92], 10)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 18, attribution: '© OpenStreetMap',
+  }).addTo(map)
+  layer = L.geoJSON(geo.value, {
+    style: (f) => ({
+      fillColor: colorOf(regionCount.value[f.properties.dong] || 0),
+      fillOpacity: 0.78, color: '#ffffff', weight: 1,
+    }),
+    onEachFeature: (f, l) => {
+      const n = regionCount.value[f.properties.dong] || 0
+      l.bindTooltip(`${f.properties.dong} · ${n}건`, { sticky: true })
+    },
+  }).addTo(map)
+  map.fitBounds(layer.getBounds(), { padding: [12, 12] })
+}
+watch(active, async (v) => {
+  if (v === 'budget') { await nextTick(); renderMap() } else destroyMap()
+})
+watch([budget, geo], async () => {
+  if (active.value === 'budget') { await nextTick(); renderMap() }
+})
+onBeforeUnmount(destroyMap)
 onMounted(async () => {
-  const [a, b, c] = await Promise.all([
+  const [a, b, c, bj, g] = await Promise.all([
     loadCSV('위상지표.csv'), loadCSV('위상카드-다모아.csv'), loadCSV('수상실적.csv'),
+    loadGeo('주민참여예산.json'), loadGeo('hwaseong_emd.geojson'),
   ])
+  budget.value = bj
+  geo.value = g
   idx.value = a
   card.value = b
   awards.value = c || []
@@ -121,6 +170,29 @@ const groups = computed(() =>
       </Card>
     </template>
 
+    <template v-else-if="active === 'budget'">
+      <div class="tiles">
+        <StatTile label="완료 사업" :value="fmt(bSum['완료사업']) + '개'" icon="trophy" accent />
+        <StatTile label="총 사업 개수" :value="fmt(bSum['총사업개수']) + '개'" icon="chart-column" />
+        <StatTile label="집행액" :value="fmt(bSum['집행액']) + '천원'" icon="chart-column" />
+        <StatTile label="예산액" :value="fmt(bSum['예산액']) + '천원'" icon="chart-column" />
+      </div>
+      <div class="donuts">
+        <Card :title="`${budget?.year ?? ''}년도 사업 완료율`">
+          <div class="donut"><DonutChart :percent="bSum['사업완료율'] || 0" color="#2c67df" :size="160" label="완료율" /></div>
+        </Card>
+        <Card :title="`${budget?.year ?? ''}년도 예산 집행률`">
+          <div class="donut"><DonutChart :percent="bSum['예산집행률'] || 0" color="#2f8f5b" :size="160" label="집행률" /></div>
+        </Card>
+      </div>
+      <Card title="읍면동별 사업 수">
+        <div ref="mapEl" class="bmap"></div>
+      </Card>
+      <Card title="사업 목록">
+        <DataTable :cols="budgetCols" :rows="budgetRows" />
+      </Card>
+    </template>
+
     <Card v-else :title="items.find((i) => i.key === active)?.label">
       <div class="soon">해당 데이터 연동 예정입니다.</div>
     </Card>
@@ -153,4 +225,8 @@ const groups = computed(() =>
 .note { font-size: 12px; color: var(--muted); }
 .empty, .soon { color: var(--muted); padding: 24px 0; text-align: center; }
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.donuts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.donut { display: flex; justify-content: center; padding: 8px 0; }
+.bmap { height: 520px; width: 100%; }
+:deep(.leaflet-container) { background: #0c1b2e; font-family: inherit; }
 </style>
