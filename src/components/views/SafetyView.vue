@@ -16,11 +16,20 @@ const items = [
 ]
 const active = ref('air')
 const air = ref({}), landslide = ref({}), stations = ref({}), geo = ref(null)
+const steep = ref({})
 const mapEl = ref(null)
 let map = null
 
 const airOk = computed(() => air.value?.status === 'ok')
 const lsOk = computed(() => landslide.value?.status === 'ok')
+const ssOk = computed(() => steep.value?.status === 'ok')
+const ssRows = computed(() =>
+  ssOk.value ? (steep.value.items || []).map((r) => [r['지구명'], r['등급'], r['평가점수'], r['지정일'], r['지정사유']]) : [])
+const ssGrades = computed(() => {
+  const g = { D: 0, C: 0 }
+  if (ssOk.value) for (const r of steep.value.items) { if (r['등급'] === 'D') g.D++; else if (r['등급'] === 'C') g.C++ }
+  return g
+})
 const airRows = computed(() =>
   airOk.value ? (air.value.stations || []).map((s) => [s.station, fmt(s.pm10), fmt(s.pm25), s.o3 ?? '—']) : [])
 const lsRows = computed(() =>
@@ -57,10 +66,11 @@ async function buildMap() {
 }
 
 onMounted(async () => {
-  const [a, l, st, g] = await Promise.all([
+  const [a, l, st, g, ss] = await Promise.all([
     loadJSON('air'), loadJSON('landslide'), loadJSON('stations'), loadGeo('hwaseong_emd.geojson'),
+    loadJSON('steepslope'),
   ])
-  air.value = a; landslide.value = l; stations.value = st; geo.value = g
+  air.value = a; landslide.value = l; stations.value = st; geo.value = g; steep.value = ss
   if (active.value === 'air') await buildMap()
 })
 
@@ -104,10 +114,26 @@ onBeforeUnmount(destroyMap)
         </Card>
       </template>
 
-      <!-- 급경사지 / 교통상황 / 자전거 -->
+      <!-- 급경사지 -->
+      <template v-else-if="active === 'slope'">
+        <div class="tiles">
+          <StatTile label="급경사지 붕괴위험지역" :value="ssOk ? steep.n + '곳' : '— (수집 대기)'" icon="shield" accent />
+          <StatTile label="D등급(위험)" :value="ssOk ? ssGrades.D + '곳' : '—'" icon="shield" />
+          <StatTile label="C등급" :value="ssOk ? ssGrades.C + '곳' : '—'" icon="shield" />
+        </div>
+        <Card title="급경사지 붕괴위험지역 — 화성시 (safetydata)">
+          <p v-if="!ssOk" class="muted">수집 대기</p>
+          <template v-else>
+            <p class="cap">전국 {{ steep.nationwide }}건 중 화성 {{ steep.n }}곳 · 재해위험도 등급(A~E)</p>
+            <DataTable :cols="['지구명', '등급', '평가점수', '지정일', '지정사유']" :rows="ssRows" />
+          </template>
+        </Card>
+      </template>
+
+      <!-- 교통상황 / 자전거 -->
       <template v-else>
         <Card :title="items.find((i) => i.key === active)?.label">
-          <p class="muted">준비 중</p>
+          <p class="muted">해당 데이터 연동 예정입니다.</p>
         </Card>
       </template>
     </div>
@@ -119,6 +145,7 @@ onBeforeUnmount(destroyMap)
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
 .lmap { height: 460px; width: 100%; border-radius: 8px; overflow: hidden; }
 .muted { color: var(--muted); margin: 0; }
+.cap { color: var(--muted); font-size: .82rem; margin: 0 0 8px; }
 :deep(.leaflet-container) { background: #0c1b2e; font-family: inherit; }
 @media (max-width: 700px) { .lmap { height: 340px; } }
 </style>

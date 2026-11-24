@@ -200,6 +200,37 @@ def collect_landslide(key: str) -> None:
         print(f"landslide 수집 실패: {type(e).__name__}")
 
 
+def collect_steepslope(key: str) -> None:
+    """급경사지 붕괴위험지역(safetydata DSSP-IF-10167) — 화성(MNG_NO 앞 5자리 41590)만 필터.
+    별도 키 SAFETY_STEEPSLOPE_KEY. 지역 필터 파라미터가 없어 MNG_NO 접두로 클라이언트 필터."""
+    base = "https://www.safetydata.go.kr/V2/api/DSSP-IF-10167"
+    grade = {"SDG001": "A", "SDG002": "B", "SDG003": "C", "SDG004": "D", "SDG005": "E"}
+    try:
+        rows, page = [], 1
+        while page <= 6:
+            q = {"serviceKey": key, "numOfRows": 1000, "pageNo": page, "type": "json"}
+            data = _get(base + "?" + urllib.parse.urlencode(q))
+            body = data.get("body") or []
+            if not body:
+                break
+            rows += body
+            total = int(data.get("totalCount", 0) or 0)
+            if len(rows) >= total:
+                break
+            page += 1
+        hs = [r for r in rows if str(r.get("MNG_NO", "")).strip().startswith("41590")]
+        clean = [{"지구명": r.get("CLPS_RSK_DSTRCT_NM"),
+                  "등급": grade.get(str(r.get("DST_DADE_EVL_GRD_CD")), r.get("DST_DADE_EVL_GRD_CD")),
+                  "평가점수": r.get("DST_DADE_EVL_SCR_SUM"),
+                  "지정일": r.get("CLPS_RSK_DSTRCT_DSGN_DT"),
+                  "지정사유": r.get("CLPS_RSK_DSTRCT_DSGN_RSN_CN")} for r in hs]
+        save("steepslope", {"status": "ok", "items": clean, "n": len(clean), "nationwide": len(rows)})
+        print(f"steepslope 수집: 화성 급경사지 {len(clean)}곳 (전국 {len(rows)})")
+    except Exception as e:
+        save("steepslope", {"status": "error", "reason": type(e).__name__})
+        print(f"steepslope 수집 실패: {type(e).__name__}")
+
+
 def collect_parking(key: str) -> None:
     """전국주차장표준데이터(15012896) — 화성시만. 승인 후 1~2h 활성화되면 수집됨."""
     base = "https://api.data.go.kr/openapi/tn_pubr_public_prkplce_info_api"
@@ -236,6 +267,11 @@ def main() -> None:
         collect_landslide(lk)
     else:
         print("SAFETY_LANDSLIDE_KEY 없음 — 산사태 수집 건너뜀.")
+    sk = os.environ.get("SAFETY_STEEPSLOPE_KEY", "")
+    if sk:
+        collect_steepslope(sk)
+    else:
+        print("SAFETY_STEEPSLOPE_KEY 없음 — 급경사지 수집 건너뜀.")
 
 
 if __name__ == "__main__":

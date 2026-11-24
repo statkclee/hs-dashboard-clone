@@ -43,7 +43,7 @@
 | 서비스 | DSSP-IF | 이용신청 | 환경변수 | 쓰임 |
 |---|---|---|---|---|
 | 산사태우려지역 | `DSSP-IF-10694` | safetydata.go.kr에서 이용신청 | `SAFETY_LANDSLIDE_KEY` | 재난/안전 |
-| 붕괴위험지역(급경사지) | (별도 번호) | 〃 | `SAFETY_STEEPSLOPE_KEY` | 재난/안전 |
+| 붕괴위험지역(급경사지) | `DSSP-IF-10167` | 〃 | `SAFETY_STEEPSLOPE_KEY` | 재난/안전 |
 
 | 순서 | 할 일 |
 |---|---|
